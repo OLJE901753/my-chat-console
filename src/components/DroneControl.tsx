@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useRealtime } from '@/components/RealtimeProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { 
   Camera, 
   Video, 
@@ -25,7 +27,18 @@ import {
   History,
   Plus,
   Save,
-  Loader2
+  Loader2,
+  Brain,
+  Zap,
+  Eye,
+  Wind,
+  Sun,
+  Cloud,
+  Target,
+  Route,
+  Shield,
+  TrendingUp,
+  CheckCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,6 +52,21 @@ interface DroneStatus {
   orientation: { yaw: number; pitch: number; roll: number };
   mission: any;
   lastUpdate: string;
+  weatherConditions: {
+    windSpeed: number;
+    windDirection: number;
+    visibility: number;
+    precipitation: number;
+    temperature: number;
+    humidity: number;
+  };
+  safetyStatus: {
+    obstacleDetected: boolean;
+    geofenceViolation: boolean;
+    lowBattery: boolean;
+    weatherWarning: boolean;
+    emergencyMode: boolean;
+  };
 }
 
 interface Mission {
@@ -47,10 +75,33 @@ interface Mission {
   description: string;
   waypoints: any[];
   status: string;
+  type: 'surveillance' | 'cinematic' | 'mapping' | 'inspection' | 'content';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  estimatedDuration: number;
+  weatherConditions: any;
+  safetyChecks: any;
+  confidence: number;
+}
+
+interface AIDroneMission {
+  id: string;
+  name: string;
+  type: 'cinematic' | 'surveillance' | 'content_creation' | 'emergency';
+  target: string;
+  duration: number;
+  waypoints: any[];
+  cameraSettings: any;
+  movementPattern: string;
+  lightingOptimization: boolean;
+  obstacleAvoidance: boolean;
+  weatherAdaptation: boolean;
+  confidence: number;
+  status: 'planned' | 'executing' | 'completed' | 'failed';
 }
 
 const DroneControl: React.FC = () => {
   const { toast } = useToast();
+  const { connected, send, subscribe } = useRealtime();
   const [droneStatus, setDroneStatus] = useState<DroneStatus>({
     connected: false,
     battery: 0,
@@ -60,7 +111,22 @@ const DroneControl: React.FC = () => {
     position: { x: 0, y: 0, z: 0 },
     orientation: { yaw: 0, pitch: 0, roll: 0 },
     mission: null,
-    lastUpdate: new Date().toISOString()
+    lastUpdate: new Date().toISOString(),
+    weatherConditions: {
+      windSpeed: 0,
+      windDirection: 0,
+      visibility: 10000,
+      precipitation: 0,
+      temperature: 25,
+      humidity: 60
+    },
+    safetyStatus: {
+      obstacleDetected: false,
+      geofenceViolation: false,
+      lowBattery: false,
+      weatherWarning: false,
+      emergencyMode: false
+    }
   });
   
   const [isConnected, setIsConnected] = useState(false);
@@ -71,114 +137,385 @@ const DroneControl: React.FC = () => {
   const [photos, setPhotos] = useState<any[]>([]);
   const [recordings, setRecordings] = useState<any[]>([]);
   
+  // AI Mission Planning
+  const [aiMissions, setAiMissions] = useState<AIDroneMission[]>([]);
+  const [selectedAIMission, setSelectedAIMission] = useState<AIDroneMission | null>(null);
+  const [aiPlanningMode, setAiPlanningMode] = useState<'automatic' | 'manual' | 'hybrid'>('automatic');
+  
   // Movement controls
   const [moveDistance, setMoveDistance] = useState(50);
   const [rotateDegrees, setRotateDegrees] = useState(90);
   const [droneSpeed, setDroneSpeed] = useState(50);
   
+  // AI Settings
+  const [aiSettings, setAiSettings] = useState({
+    obstacleAvoidance: true,
+    weatherAdaptation: true,
+    cinematicMode: true,
+    autoReturnHome: true,
+    emergencyProcedures: true,
+    geofencing: true,
+    maxAltitude: 120,
+    maxDistance: 500,
+    safetyMargin: 20
+  });
+  
   // Mission planning
   const [newMission, setNewMission] = useState({
     name: '',
     description: '',
-    waypoints: []
+    waypoints: [],
+    type: 'surveillance' as const,
+    priority: 'medium' as const
   });
   
-  const socketRef = useRef<WebSocket | null>(null);
   const telemetryIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize WebSocket connection
+  // Use the shared realtime connection
   useEffect(() => {
-    const connectWebSocket = () => {
-      const ws = new WebSocket('ws://localhost:3001');
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        setIsConnected(true);
-        joinTelemetryRoom();
-      };
-      
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        handleWebSocketMessage(data);
-      };
-      
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        setIsConnected(false);
-        // Attempt to reconnect
-        setTimeout(connectWebSocket, 5000);
-      };
-      
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-      
-      socketRef.current = ws;
-    };
-
-    connectWebSocket();
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-      if (telemetryIntervalRef.current) {
-        clearInterval(telemetryIntervalRef.current);
-      }
-    };
-  }, []);
-
-  const joinTelemetryRoom = () => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({
-        type: 'join',
-        room: 'drone-telemetry'
-      }));
+    setIsConnected(connected);
+    
+    if (connected) {
+      joinTelemetryRoom();
     }
-  };
+  }, [connected]);
+
+  // Subscribe to drone-related messages
+  useEffect(() => {
+    if (connected) {
+      subscribe('drone_telemetry', handleWebSocketMessage);
+      subscribe('mission_progress', handleWebSocketMessage);
+      subscribe('agent_status', handleWebSocketMessage);
+    }
+  }, [connected, subscribe]);
 
   const handleWebSocketMessage = (data: any) => {
+    // Handle different message types from the realtime service
+    if (data.type === 'drone_telemetry') {
+      setDroneStatus(prev => ({
+        ...prev,
+        ...data,
+        lastUpdate: new Date().toISOString()
+      }));
+    } else if (data.type === 'mission_progress') {
+      setActiveMission(data);
+    } else if (data.type === 'agent_status') {
+      // Handle agent status updates if needed
+      console.log('Agent status update:', data);
+    }
+    
+    // Legacy message handling for backward compatibility
     switch (data.type) {
-      case 'drone-status':
-        setDroneStatus(data.data);
+      case 'telemetry':
+        setDroneStatus(prev => ({
+          ...prev,
+          ...data.telemetry,
+          lastUpdate: new Date().toISOString()
+        }));
         break;
-      case 'command-result':
-        handleCommandResult(data);
+      case 'mission_update':
+        setActiveMission(data.mission);
         break;
-      case 'mission-update':
-        handleMissionUpdate(data);
+      case 'safety_alert':
+        handleSafetyAlert(data.alert);
         break;
-      default:
-        console.log('Unknown message type:', data.type);
+      case 'weather_update':
+        setDroneStatus(prev => ({
+          ...prev,
+          weatherConditions: data.weather
+        }));
+        break;
+      case 'obstacle_detected':
+        setDroneStatus(prev => ({
+          ...prev,
+          safetyStatus: {
+            ...prev.safetyStatus,
+            obstacleDetected: true
+          }
+        }));
+        break;
     }
   };
 
-  const handleCommandResult = (data: any) => {
-    if (data.success) {
-      toast({
-        title: 'Command Executed',
-        description: data.result.message,
-      });
-      // Update command history
-      setCommandHistory(prev => [{
-        command: data.command,
-        result: data.result,
-        timestamp: new Date().toISOString()
-      }, ...prev.slice(0, 49)]);
-    } else {
-      toast({
-        title: 'Command Failed',
-        description: data.error,
-        variant: 'destructive',
+  const handleSafetyAlert = (alert: any) => {
+    toast({
+      title: "Safety Alert",
+      description: alert.message,
+      variant: alert.severity === 'high' ? 'destructive' : 'default'
+    });
+  };
+
+  const joinTelemetryRoom = () => {
+    if (connected) {
+      send('join_room', {
+        room: 'drone_telemetry'
       });
     }
   };
 
-  const handleMissionUpdate = (data: any) => {
-    // Update mission status
-    if (activeMission && activeMission.id === data.missionId) {
-      setActiveMission(prev => prev ? { ...prev, ...data } : null);
+  // AI Mission Planning Functions
+  const generateAIMission = async (type: string, target: string) => {
+    setIsLoading(true);
+    try {
+      // Simulate AI mission generation
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const newAIMission: AIDroneMission = {
+        id: `ai_mission_${Date.now()}`,
+        name: `${type.charAt(0).toUpperCase() + type.slice(1)} Mission - ${target}`,
+        type: type as any,
+        target,
+        duration: Math.floor(15 + Math.random() * 45),
+        waypoints: generateAIWaypoints(target, type),
+        cameraSettings: generateCameraSettings(type),
+        movementPattern: getMovementPattern(type),
+        lightingOptimization: true,
+        obstacleAvoidance: true,
+        weatherAdaptation: true,
+        confidence: 0.85 + Math.random() * 0.15,
+        status: 'planned'
+      };
+      
+      setAiMissions(prev => [...prev, newAIMission]);
+      toast({
+        title: "AI Mission Generated",
+        description: `New ${type} mission created for ${target}`
+      });
+    } catch (error) {
+      toast({
+        title: "Mission Generation Failed",
+        description: "Could not generate AI mission",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const generateAIWaypoints = (target: string, type: string) => {
+    const baseCoords = { lat: 59.9139, lng: 10.7522 };
+    const waypoints = [];
+    
+    if (type === 'cinematic') {
+      waypoints.push(
+        { lat: baseCoords.lat, lng: baseCoords.lng, alt: 30, action: 'takeoff', camera: 'down' },
+        { lat: baseCoords.lat + 0.001, lng: baseCoords.lng, alt: 60, action: 'rise', camera: 'forward' },
+        { lat: baseCoords.lat + 0.002, lng: baseCoords.lng + 0.001, alt: 80, action: 'orbit', camera: 'orbital' },
+        { lat: baseCoords.lat + 0.003, lng: baseCoords.lng + 0.002, alt: 70, action: 'pan', camera: 'side' },
+        { lat: baseCoords.lat, lng: baseCoords.lng, alt: 40, action: 'land', camera: 'down' }
+      );
+    } else if (type === 'content_creation') {
+      waypoints.push(
+        { lat: baseCoords.lat, lng: baseCoords.lng, alt: 25, action: 'takeoff', camera: 'down' },
+        { lat: baseCoords.lat + 0.0005, lng: baseCoords.lng, alt: 50, action: 'survey', camera: 'forward' },
+        { lat: baseCoords.lat + 0.001, lng: baseCoords.lng + 0.0005, alt: 75, action: 'capture', camera: 'angled' },
+        { lat: baseCoords.lat + 0.0015, lng: baseCoords.lng + 0.001, alt: 60, action: 'final', camera: 'hero' },
+        { lat: baseCoords.lat, lng: baseCoords.lng, alt: 30, action: 'land', camera: 'down' }
+      );
+    }
+    
+    return waypoints.map((wp, index) => ({
+      ...wp,
+      id: `wp_${index}`,
+      order: index,
+      estimatedTime: index * 2
+    }));
+  };
+
+  const generateCameraSettings = (type: string) => {
+    const settings = {
+      cinematic: {
+        resolution: '4K',
+        frameRate: 60,
+        iso: 100,
+        shutterSpeed: '1/120',
+        whiteBalance: 'auto',
+        focus: 'auto'
+      },
+      content_creation: {
+        resolution: '4K',
+        frameRate: 30,
+        iso: 200,
+        shutterSpeed: '1/60',
+        whiteBalance: 'daylight',
+        focus: 'manual'
+      },
+      surveillance: {
+        resolution: '1080p',
+        frameRate: 30,
+        iso: 400,
+        shutterSpeed: '1/30',
+        whiteBalance: 'auto',
+        focus: 'auto'
+      }
+    };
+    
+    return settings[type as keyof typeof settings] || settings.surveillance;
+  };
+
+  const getMovementPattern = (type: string) => {
+    const patterns = {
+      cinematic: 'Smooth, graceful movements with dramatic angles',
+      content_creation: 'Dynamic movements optimized for social media',
+      surveillance: 'Systematic grid pattern for thorough coverage',
+      inspection: 'Precise positioning for detailed examination'
+    };
+    
+    return patterns[type as keyof typeof patterns] || patterns.surveillance;
+  };
+
+  const executeAIMission = async (mission: AIDroneMission) => {
+    setIsLoading(true);
+    try {
+      setSelectedAIMission(mission);
+      mission.status = 'executing';
+      
+      // Simulate mission execution
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      mission.status = 'completed';
+      setSelectedAIMission(null);
+      
+      toast({
+        title: "AI Mission Completed",
+        description: `${mission.name} finished successfully`
+      });
+      
+      // Add to completed missions
+      setMissions(prev => [...prev, {
+        id: mission.id,
+        name: mission.name,
+        description: `AI-generated ${mission.type} mission`,
+        waypoints: mission.waypoints,
+        status: 'completed',
+        type: mission.type as any,
+        priority: 'medium',
+        estimatedDuration: mission.duration,
+        weatherConditions: droneStatus.weatherConditions,
+        safetyChecks: { passed: true },
+        confidence: mission.confidence
+      }]);
+      
+    } catch (error) {
+      mission.status = 'failed';
+      toast({
+        title: "Mission Failed",
+        description: "AI mission execution failed",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Enhanced safety functions
+  const emergencyStop = () => {
+    if (connected) {
+      send('emergency_stop', {
+        droneId: 'drone_01'
+      });
+    }
+    
+    setDroneStatus(prev => ({
+      ...prev,
+      safetyStatus: {
+        ...prev.safetyStatus,
+        emergencyMode: true
+      }
+    }));
+    
+    toast({
+      title: "Emergency Stop",
+      description: "Drone emergency stop executed",
+      variant: "destructive"
+    });
+  };
+
+  const returnToHome = () => {
+    if (connected) {
+      send('return_home', {
+        droneId: 'drone_01'
+      });
+    }
+    
+    toast({
+      title: "Return to Home",
+      description: "Drone returning to home position"
+    });
+  };
+
+  // Basic flight control functions
+  const handleTakeoff = () => {
+    if (connected) {
+      send('takeoff', {
+        droneId: 'drone_01'
+      });
+    }
+    
+    toast({
+      title: "Takeoff",
+      description: "Drone taking off"
+    });
+  };
+
+  const handleLand = () => {
+    if (connected) {
+      send('land', {
+        droneId: 'drone_01'
+      });
+    }
+    
+    toast({
+      title: "Landing",
+      description: "Drone landing"
+    });
+  };
+
+  const handleEmergency = () => {
+    emergencyStop();
+  };
+
+  const handleMove = (direction: string) => {
+    if (connected) {
+      send('move', {
+        direction,
+        distance: moveDistance,
+        droneId: 'drone_01'
+      });
+    }
+    
+    toast({
+      title: "Movement",
+      description: `Drone moving ${direction}`
+    });
+  };
+
+  const handleRotate = () => {
+    if (connected) {
+      send('rotate', {
+        degrees: rotateDegrees,
+        droneId: 'drone_01'
+      });
+    }
+    
+    toast({
+      title: "Rotation",
+      description: `Drone rotating ${rotateDegrees} degrees`
+    });
+  };
+
+  const handleSetSpeed = () => {
+    if (connected) {
+      send('set_speed', {
+        speed: droneSpeed,
+        droneId: 'drone_01'
+      });
+    }
+    
+    toast({
+      title: "Speed Set",
+      description: `Drone speed set to ${droneSpeed} cm/s`
+    });
   };
 
   // Execute drone command
@@ -195,12 +532,11 @@ const DroneControl: React.FC = () => {
     setIsLoading(true);
     
     try {
-      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.send(JSON.stringify({
-          type: 'drone-command',
+      if (connected) {
+        send('drone-command', {
           command,
           params
-        }));
+        });
       } else {
         // Fallback to HTTP API
         const response = await fetch(`http://localhost:3001/api/drone/command`, {
@@ -232,22 +568,7 @@ const DroneControl: React.FC = () => {
     }
   };
 
-  // Flight controls
-  const handleTakeoff = () => executeCommand('takeoff');
-  const handleLand = () => executeCommand('land');
-  const handleEmergency = () => executeCommand('emergency');
-  
-  const handleMove = (direction: string) => {
-    executeCommand('move', { direction, distance: moveDistance });
-  };
-  
-  const handleRotate = () => {
-    executeCommand('rotate', { degrees: rotateDegrees });
-  };
-  
-  const handleSetSpeed = () => {
-    executeCommand('set_speed', { speed: droneSpeed });
-  };
+  // Flight controls - using the detailed implementations above
 
   // Camera controls
   const handleCapturePhoto = () => executeCommand('capture_photo');
@@ -328,11 +649,12 @@ const DroneControl: React.FC = () => {
       </Card>
 
       <Tabs defaultValue="control" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="control">Flight Control</TabsTrigger>
           <TabsTrigger value="telemetry">Telemetry</TabsTrigger>
           <TabsTrigger value="camera">Camera</TabsTrigger>
           <TabsTrigger value="missions">Missions</TabsTrigger>
+          <TabsTrigger value="ai-missions">AI Missions</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
@@ -492,9 +814,160 @@ const DroneControl: React.FC = () => {
           </div>
         </TabsContent>
 
+        {/* AI Mission Planning Tab */}
+        <TabsContent value="ai-missions" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* AI Mission Generator */}
+            <Card className="glass-card border-blue-500/20 lg:col-span-1">
+              <CardHeader>
+                <CardTitle className="gradient-text flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  AI Mission Generator
+                </CardTitle>
+                <CardDescription>
+                  Generate intelligent drone missions for optimal content capture
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="missionType">Mission Type</Label>
+                  <select
+                    id="missionType"
+                    className="w-full p-2 rounded-md bg-background border border-input"
+                    onChange={(e) => setNewMission(prev => ({ ...prev, type: e.target.value as any }))}
+                  >
+                    <option value="cinematic">Cinematic</option>
+                    <option value="content_creation">Content Creation</option>
+                    <option value="surveillance">Surveillance</option>
+                    <option value="inspection">Inspection</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="targetArea">Target Area</Label>
+                  <select
+                    id="targetArea"
+                    className="w-full p-2 rounded-md bg-background border border-input"
+                  >
+                    <option value="apple_orchard">Apple Orchard</option>
+                    <option value="pear_orchard">Pear Orchard</option>
+                    <option value="cherry_orchard">Cherry Orchard</option>
+                    <option value="vineyard">Vineyard</option>
+                    <option value="greenhouse">Greenhouse</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="aiPlanningMode">AI Planning Mode</Label>
+                  <select
+                    id="aiPlanningMode"
+                    className="w-full p-2 rounded-md bg-background border border-input"
+                    value={aiPlanningMode}
+                    onChange={(e) => setAiPlanningMode(e.target.value as any)}
+                  >
+                    <option value="automatic">Fully Automatic</option>
+                    <option value="hybrid">Hybrid (AI + Manual)</option>
+                    <option value="manual">Manual Override</option>
+                  </select>
+                </div>
+
+                <Button 
+                  onClick={() => generateAIMission(newMission.type, 'apple_orchard')}
+                  disabled={isLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Brain className="h-4 w-4" />
+                  )}
+                  Generate AI Mission
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* AI Mission Queue */}
+            <Card className="glass-card border-purple-500/20 lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="gradient-text flex items-center gap-2">
+                  <Route className="h-5 w-5" />
+                  AI Mission Queue
+                </CardTitle>
+                <CardDescription>
+                  Manage and execute AI-generated missions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {aiMissions.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No AI missions generated yet</p>
+                    <p className="text-sm">Generate your first mission to get started</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {aiMissions.map((mission) => (
+                      <div key={mission.id} className="p-4 border border-border rounded-lg bg-card/50">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold">{mission.name}</h4>
+                            <p className="text-sm text-muted-foreground">{mission.type.replace('_', ' ')} • {mission.duration}min</p>
+                          </div>
+                          <Badge 
+                            variant={mission.status === 'completed' ? 'default' : mission.status === 'executing' ? 'secondary' : 'outline'}
+                            className={mission.status === 'completed' ? 'bg-green-500/20 text-green-400' : ''}
+                          >
+                            {mission.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                          <div>
+                            <span className="text-muted-foreground">Confidence:</span>
+                            <div className="flex items-center gap-2">
+                              <Progress value={mission.confidence * 100} className="flex-1" />
+                              <span>{(mission.confidence * 100).toFixed(1)}%</span>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Movement:</span>
+                            <p className="text-xs">{mission.movementPattern}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          {mission.status === 'planned' && (
+                            <Button 
+                              size="sm"
+                              onClick={() => executeAIMission(mission)}
+                              disabled={isLoading}
+                              className="bg-purple-600 hover:bg-purple-700"
+                            >
+                              <Play className="h-4 w-4" />
+                              Execute
+                            </Button>
+                          )}
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setSelectedAIMission(mission)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         {/* Telemetry Tab */}
         <TabsContent value="telemetry" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <Card className="glass-card border-lime-500/20">
               <CardHeader className="pb-2">
                 <CardTitle className="gradient-text flex items-center gap-2 text-sm">
@@ -521,6 +994,19 @@ const DroneControl: React.FC = () => {
               </CardContent>
             </Card>
 
+            <Card className="glass-card border-blue-500/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="gradient-text flex items-center gap-2 text-sm">
+                  <Wind className="h-4 w-4" />
+                  Weather
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-bold">{droneStatus.weatherConditions.windSpeed.toFixed(1)} m/s</div>
+                <div className="text-xs text-muted-foreground">Wind • {droneStatus.weatherConditions.visibility/1000}km visibility</div>
+              </CardContent>
+            </Card>
+
             <Card className="glass-card border-lime-500/20">
               <CardHeader className="pb-2">
                 <CardTitle className="gradient-text flex items-center gap-2 text-sm">
@@ -544,6 +1030,43 @@ const DroneControl: React.FC = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{droneStatus.temperature.toFixed(1)}°C</div>
                 <div className="text-xs text-muted-foreground">Drone temp</div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-red-500/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="gradient-text flex items-center gap-2 text-sm">
+                  <Shield className="h-4 w-4" />
+                  Safety Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  {droneStatus.safetyStatus.obstacleDetected && (
+                    <div className="flex items-center gap-2 text-xs text-red-400">
+                      <AlertTriangle className="h-3 w-3" />
+                      Obstacle Detected
+                    </div>
+                  )}
+                  {droneStatus.safetyStatus.weatherWarning && (
+                    <div className="flex items-center gap-2 text-xs text-yellow-400">
+                      <Cloud className="h-3 w-3" />
+                      Weather Warning
+                    </div>
+                  )}
+                  {droneStatus.safetyStatus.lowBattery && (
+                    <div className="flex items-center gap-2 text-xs text-yellow-400">
+                      <Battery className="h-3 w-3" />
+                      Low Battery
+                    </div>
+                  )}
+                  {!droneStatus.safetyStatus.obstacleDetected && !droneStatus.safetyStatus.weatherWarning && !droneStatus.safetyStatus.lowBattery && (
+                    <div className="flex items-center gap-2 text-xs text-green-400">
+                      <CheckCircle className="h-3 w-3" />
+                      All Systems OK
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>

@@ -1,10 +1,18 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DroneControl from '@/components/DroneControl';
-import AIMissionPlanner from '@/components/AIMissionPlanner';
-import DroneMediaLibrary from '@/components/DroneMediaLibrary';
-import FarmSensorOverview from '@/components/FarmSensorOverview';
+import LazyComponent from '@/components/LazyComponent';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import ErrorDisplay from '@/components/ErrorDisplay';
+import RealtimeDashboard from '@/components/RealtimeDashboard';
+
+// Lazy load components for code splitting
+const DroneControlRefactored = () => import('@/components/drone/DroneControlRefactored');
+const AIMissionPlanner = () => import('@/components/AIMissionPlanner');
+const DroneMediaLibrary = () => import('@/components/DroneMediaLibrary');
+const FarmSensorOverviewOptimized = () => import('@/components/sensors/FarmSensorOverviewOptimized');
+const AIAgentManager = () => import('@/components/AIAgentManager');
+const PythonAIControl = () => import('@/components/PythonAIControl');
 
 const Dashboard: React.FC = () => {
   return (
@@ -15,24 +23,88 @@ const Dashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="drone-control" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="realtime">Real-time</TabsTrigger>
           <TabsTrigger value="drone-control">Drone Control</TabsTrigger>
           <TabsTrigger value="ai-missions">AI Mission Planning</TabsTrigger>
           <TabsTrigger value="media-library">Media Library</TabsTrigger>
           <TabsTrigger value="farm-overview">Farm Overview</TabsTrigger>
+          <TabsTrigger value="ai-agents">AI Agents</TabsTrigger>
+          <TabsTrigger value="python-ai">Python AI</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="drone-control">
-          <DroneControl />
+        <TabsContent value="realtime">
+          <ErrorBoundary
+            fallback={
+              <ErrorDisplay
+                error="Failed to load Real-time Dashboard"
+                title="Real-time Dashboard Error"
+                description="There was an error loading the real-time data dashboard. This may be due to a WebSocket connection issue."
+                onRetry={() => window.location.reload()}
+                retryLabel="Reload Page"
+              />
+            }
+          >
+            <RealtimeDashboard />
+          </ErrorBoundary>
         </TabsContent>
 
-                  <TabsContent value="ai-missions">
-            <AIMissionPlanner />
-          </TabsContent>
+        <TabsContent value="drone-control">
+          <ErrorBoundary
+            fallback={
+              <ErrorDisplay
+                error="Failed to load Drone Control"
+                title="Drone Control Error"
+                description="There was an error loading the drone control interface. This may be due to a connection issue or server problem."
+                onRetry={() => window.location.reload()}
+                retryLabel="Reload Page"
+              />
+            }
+          >
+            <LazyComponent 
+              component={DroneControlRefactored} 
+              loadingMessage="Loading drone control interface..."
+            />
+          </ErrorBoundary>
+        </TabsContent>
 
-          <TabsContent value="media-library">
-            <DroneMediaLibrary />
-          </TabsContent>
+        <TabsContent value="ai-missions">
+          <ErrorBoundary
+            fallback={
+              <ErrorDisplay
+                error="Failed to load AI Mission Planner"
+                title="AI Mission Planner Error"
+                description="There was an error loading the AI mission planning interface. Please try again."
+                onRetry={() => window.location.reload()}
+                retryLabel="Reload Page"
+              />
+            }
+          >
+            <LazyComponent 
+              component={AIMissionPlanner} 
+              loadingMessage="Loading AI mission planner..."
+            />
+          </ErrorBoundary>
+        </TabsContent>
+
+        <TabsContent value="media-library">
+          <ErrorBoundary
+            fallback={
+              <ErrorDisplay
+                error="Failed to load Media Library"
+                title="Media Library Error"
+                description="There was an error loading the media library. This may be due to a database connection issue."
+                onRetry={() => window.location.reload()}
+                retryLabel="Reload Page"
+              />
+            }
+          >
+            <LazyComponent 
+              component={DroneMediaLibrary} 
+              loadingMessage="Loading media library..."
+            />
+          </ErrorBoundary>
+        </TabsContent>
 
           <TabsContent value="farm-overview">
             <div className="space-y-6">
@@ -121,8 +193,61 @@ const Dashboard: React.FC = () => {
               </div>
 
               {/* New Sensor Charts */}
-              <FarmSensorOverview />
+              <ErrorBoundary
+                fallback={
+                  <ErrorDisplay
+                    error="Failed to load Farm Sensor Overview"
+                    title="Sensor Overview Error"
+                    description="There was an error loading the farm sensor data. This may be due to a sensor connection issue."
+                    onRetry={() => window.location.reload()}
+                    retryLabel="Reload Page"
+                  />
+                }
+              >
+                <LazyComponent 
+                  component={FarmSensorOverviewOptimized} 
+                  loadingMessage="Loading farm sensor data..."
+                />
+              </ErrorBoundary>
             </div>
+          </TabsContent>
+
+          <TabsContent value="ai-agents" className="space-y-6">
+            <ErrorBoundary
+              fallback={
+                <ErrorDisplay
+                  error="Failed to load AI Agent Manager"
+                  title="AI Agent Manager Error"
+                  description="There was an error loading the AI agent management interface. This may be due to a service connection issue."
+                  onRetry={() => window.location.reload()}
+                  retryLabel="Reload Page"
+                />
+              }
+            >
+              <LazyComponent 
+                component={AIAgentManager} 
+                loadingMessage="Loading AI agent manager..."
+              />
+            </ErrorBoundary>
+          </TabsContent>
+
+          <TabsContent value="python-ai" className="space-y-6">
+            <ErrorBoundary
+              fallback={
+                <ErrorDisplay
+                  error="Failed to load Python AI Control"
+                  title="Python AI Control Error"
+                  description="There was an error loading the Python AI control interface. This may be due to a Python service connection issue."
+                  onRetry={() => window.location.reload()}
+                  retryLabel="Reload Page"
+                />
+              }
+            >
+              <LazyComponent 
+                component={PythonAIControl} 
+                loadingMessage="Loading Python AI control interface..."
+              />
+            </ErrorBoundary>
           </TabsContent>
       </Tabs>
     </div>

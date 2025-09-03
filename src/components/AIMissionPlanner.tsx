@@ -436,7 +436,7 @@ const AIMissionPlanner: React.FC = () => {
                 <p className="text-gray-400 mb-4">
                   Generate an AI mission to see the current mission details here.
                 </p>
-                <Button onClick={() => document.querySelector('[data-value="planning"]')?.click()}>
+                <Button onClick={() => (document.querySelector('[data-value="planning"]') as HTMLElement)?.click()}>
                   Go to Mission Planning
                 </Button>
               </CardContent>

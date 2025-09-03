@@ -1,9 +1,10 @@
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const { errorHandler, notFoundHandler, timeoutHandler } = require('./middleware/errorHandler');
+const { performanceMonitor, createRateLimiter, memoryMonitor, cpuMonitor, healthCheck, performanceMetrics } = require('./middleware/performance');
 require('dotenv').config();
 
 const droneRoutes = require('./routes/drone');
@@ -11,17 +12,16 @@ const missionRoutes = require('./routes/mission');
 const telemetryRoutes = require('./routes/telemetry');
 const aiMissionRoutes = require('./routes/aiMission');
 const supabaseRoutes = require('./routes/supabase');
-const { initializeDroneService } = require('./services/droneService');
+const AIAgentRoutes = require('./routes/aiAgents');
+const pythonAIRoutes = require('./routes/pythonAI');
+const { router: sseRoutes } = require('./routes/sse');
+const AIAgentService = require('./services/aiAgentService');
+const { initializeDroneService } = require('./services/droneServiceImproved');
 const { initializeDatabase } = require('./database/init');
+const SSEService = require('./services/sseService');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:8080",
-    methods: ["GET", "POST"]
-  }
-});
 
 // Security middleware
 app.use(helmet({
@@ -35,12 +35,11 @@ app.use(helmet({
   },
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
+// Performance monitoring
+app.use(performanceMonitor);
+
+// Rate limiting with performance tracking
+const limiter = createRateLimiter(15 * 60 * 1000, 100); // 15 minutes, 100 requests
 app.use('/api/', limiter);
 
 // CORS
@@ -48,6 +47,9 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:8080",
   credentials: true
 }));
+
+// Request timeout
+app.use(timeoutHandler(30000)); // 30 seconds
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -60,17 +62,10 @@ app.use((req, res, next) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    services: {
-      drone: 'active',
-      ai: 'active',
-      database: 'active'
-    }
-  });
-});
+app.get('/health', healthCheck);
+
+// Performance metrics endpoint
+app.get('/metrics', performanceMetrics);
 
 // API routes
 app.use('/api/drone', droneRoutes);
@@ -78,55 +73,55 @@ app.use('/api/missions', missionRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/ai-missions', aiMissionRoutes);
 app.use('/api/supabase', supabaseRoutes);
+app.use('/api/python-ai', pythonAIRoutes);
+app.use('/api', sseRoutes);
 
-// WebSocket connection handling
-io.on('connection', (socket) => {
-  console.log('🔌 New client connected:', socket.id);
-
-  socket.on('disconnect', () => {
-    console.log('🔌 Client disconnected:', socket.id);
-  });
-
-  // Handle drone control commands
-  socket.on('drone:command', async (data) => {
-    try {
-      console.log('🚁 Drone command received:', data);
-      // Forward to drone service
-      io.emit('drone:status', { status: 'command_received', data });
-    } catch (error) {
-      console.error('Drone command error:', error);
-      socket.emit('drone:error', { error: error.message });
-    }
-  });
-
-  // Handle mission updates
-  socket.on('mission:update', (data) => {
-    console.log('📋 Mission update:', data);
-    io.emit('mission:status', data);
-  });
-
-  // Handle AI mission planning
-  socket.on('ai:plan_mission', async (data) => {
-    try {
-      console.log('🤖 AI Mission Planning request:', data);
-      io.emit('ai:planning_status', { status: 'planning_started', data });
-    } catch (error) {
-      console.error('AI Mission Planning error:', error);
-      socket.emit('ai:error', { error: error.message });
-    }
-  });
+// AI Agent routes - initialize after services are ready
+app.use('/api/ai-agents', (req, res, next) => {
+  if (!aiAgentService) {
+    return res.status(503).json({ error: 'AI Agent service not ready' });
+  }
+  const aiAgentRoutes = new AIAgentRoutes(aiAgentService);
+  aiAgentRoutes.setupRoutes()(req, res, next);
 });
 
+// SSE stats endpoint
+app.get('/api/sse/stats', (req, res) => {
+  if (sseService) {
+    res.json(sseService.getStats());
+  } else {
+    res.status(503).json({ error: 'SSE service not initialized' });
+  }
+});
+
+// Server-Sent Events (SSE) for real-time data streaming
+
 // Initialize services
+let aiAgentService;
+let sseService;
+
 async function initializeServices() {
   try {
     // Initialize database
     await initializeDatabase();
     console.log('✅ Database initialized');
 
-    // Initialize drone service
-    await initializeDroneService(io);
+    // Initialize AI Agent service
+    aiAgentService = new AIAgentService();
+    console.log('✅ AI Agent service initialized');
+
+    // Initialize drone service (no longer needs io parameter)
+    await initializeDroneService();
     console.log('✅ Drone service initialized');
+
+    // Start performance monitoring
+    memoryMonitor();
+    cpuMonitor();
+    console.log('✅ Performance monitoring started');
+
+    // Initialize SSE service
+    sseService = new SSEService();
+    console.log('✅ SSE service initialized');
 
     console.log('🚀 All services initialized successfully');
   } catch (error) {
@@ -139,12 +134,16 @@ async function initializeServices() {
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`🚁 Drone Control Server running on port ${PORT}`);
-  console.log(`📡 WebSocket server ready for real-time communication`);
+  console.log(`📡 SSE server ready for real-time communication`);
   console.log(`🤖 AI Mission Planning System active`);
   
   // Initialize services after server starts
   initializeServices();
 });
+
+// Error handling middleware (must be last)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // Graceful shutdown
 process.on('SIGINT', () => {
@@ -163,4 +162,16 @@ process.on('SIGTERM', () => {
   });
 });
 
-module.exports = { app, server, io };
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+module.exports = { app, server };
