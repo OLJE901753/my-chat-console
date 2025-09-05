@@ -1,6 +1,7 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Zap, Database, Wifi, Server } from 'lucide-react';
+import React from 'react';
+
+import { Card, CardContent } from '@/components/ui/card';
 
 export interface LoadingStateProps {
   message?: string;

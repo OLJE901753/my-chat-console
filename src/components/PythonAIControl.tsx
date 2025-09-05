@@ -1,15 +1,16 @@
+import { Loader2, Play, CheckCircle, XCircle, Clock, Brain, Zap, Target, FileText, AlertTriangle } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
+
 import { Badge } from './ui/badge';
-import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Separator } from './ui/separator';
-import { Loader2, Play, CheckCircle, XCircle, Clock, Brain, Zap, Target, FileText, AlertTriangle } from 'lucide-react';
-import { pythonAIService, PythonAIResponse, PythonAIStatus } from '../services/pythonAIService';
+import { Textarea } from './ui/textarea';
 import { useToast } from '../hooks/use-toast';
+import { pythonAIService, PythonAIResponse, PythonAIStatus } from '../services/pythonAIService';
 
 interface PythonAIControlProps {
   className?: string;
@@ -121,10 +122,10 @@ export const PythonAIControl: React.FC<PythonAIControlProps> = ({ className }) =
     }
   };
 
-  const getOperationIcon = (operationValue: string) => {
-    const operation = operations.find(op => op.value === operationValue);
-    return operation ? operation.icon : Brain;
-  };
+  // const getOperationIcon = (operationValue: string) => {
+  //   const operation = operations.find(op => op.value === operationValue);
+  //   return operation ? operation.icon : Brain;
+  // };
 
   const getStatusBadge = () => {
     if (!status) return <Badge variant="secondary">Unknown</Badge>;

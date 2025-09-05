@@ -46,7 +46,7 @@ export class PythonAIService {
       // Try to check if server is running
       const response = await apiClient.get<PythonAIStatus>(`${this.baseUrl}/status`);
       return response;
-    } catch (error) {
+    } catch {
       // Server not running - return offline status
       return {
         isRunning: false,
@@ -69,7 +69,7 @@ export class PythonAIService {
         operation: 'daily',
         timestamp: new Date().toISOString()
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         output: `Error: Server not running. Please start the Node.js server first.`,
@@ -91,7 +91,7 @@ export class PythonAIService {
         operation: 'crisis',
         timestamp: new Date().toISOString()
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         output: `Error: Server not running. Please start the Node.js server first.`,
@@ -113,7 +113,7 @@ export class PythonAIService {
         operation: 'content',
         timestamp: new Date().toISOString()
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         output: `Error: Server not running. Please start the Node.js server first.`,
@@ -135,7 +135,7 @@ export class PythonAIService {
         operation: 'strategic',
         timestamp: new Date().toISOString()
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         output: `Error: Server not running. Please start the Node.js server first.`,
@@ -145,7 +145,7 @@ export class PythonAIService {
     }
   }
 
-  async runFullCrew(inputs: any = {}): Promise<PythonAIResponse> {
+  async runFullCrew(inputs: Record<string, unknown> = {}): Promise<PythonAIResponse> {
     try {
       const response = await apiClient.post<{ status: string; output?: string }>(`${this.baseUrl}/run-ai-task`, {
         taskType: 'full',
@@ -157,7 +157,7 @@ export class PythonAIService {
         operation: 'full',
         timestamp: new Date().toISOString()
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         output: `Error: Server not running. Please start the Node.js server first.`,
@@ -167,7 +167,7 @@ export class PythonAIService {
     }
   }
 
-  async runTest(inputs: any = {}): Promise<PythonAIResponse> {
+  async runTest(inputs: Record<string, unknown> = {}): Promise<PythonAIResponse> {
     try {
       const response = await apiClient.post<{ status: string; output?: string }>(`${this.baseUrl}/run-ai-task`, {
         taskType: 'test',
@@ -179,7 +179,7 @@ export class PythonAIService {
         operation: 'test',
         timestamp: new Date().toISOString()
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         output: `Error: Server not running. Please start the Node.js server first.`,

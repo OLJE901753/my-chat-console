@@ -1,8 +1,3 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { 
   Activity, 
   Wifi, 
@@ -16,13 +11,18 @@ import {
   Clock,
   AlertTriangle
 } from 'lucide-react';
+import React, { useState } from 'react';
+
+import { useRealtime } from '@/components/RealtimeProvider';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDroneTelemetry } from '@/hooks/useRealtimeData';
 import { useSensorReadings } from '@/hooks/useRealtimeData';
 import { useWeatherData } from '@/hooks/useRealtimeData';
 import { useAgentStatus } from '@/hooks/useRealtimeData';
 import { useMissionProgress } from '@/hooks/useRealtimeData';
 import { useSystemAlerts } from '@/hooks/useRealtimeData';
-import { useRealtime } from '@/components/RealtimeProvider';
 
 const RealtimeDashboard: React.FC = () => {
   const { connected, lastActivity } = useRealtime();
@@ -501,7 +501,7 @@ const WeatherTab: React.FC = () => {
 };
 
 const AgentsTab: React.FC = () => {
-  const { data: agentData, isLive, lastUpdate } = useAgentStatus();
+  const { data: agentData, isLive } = useAgentStatus();
 
   if (!agentData) {
     return (

@@ -1,4 +1,4 @@
-import { apiClient, ApiClientError } from './apiClient';
+import { ApiClientError } from './apiClient';
 
 // Enhanced collaboration interfaces
 export interface CrewCollaboration {
@@ -125,7 +125,7 @@ class AIAgentAPIService {
   }
 
   // Crop Health Monitor
-  async analyzeCropHealth(imageData: any, metadata?: any) {
+  async analyzeCropHealth(imageData: unknown, metadata?: Record<string, unknown>) {
     return this.apiCall('/ai-agents/crop-health/analyze', {
       method: 'POST',
       body: JSON.stringify({ imageData, metadata }),
@@ -133,7 +133,7 @@ class AIAgentAPIService {
   }
 
   // Irrigation Optimizer
-  async optimizeIrrigation(sensorData: any, weatherData?: any) {
+  async optimizeIrrigation(sensorData: Record<string, unknown>, weatherData?: Record<string, unknown>) {
     return this.apiCall('/ai-agents/irrigation/optimize', {
       method: 'POST',
       body: JSON.stringify({ sensorData, weatherData }),
@@ -141,7 +141,7 @@ class AIAgentAPIService {
   }
 
   // Predictive Maintenance
-  async analyzePredictiveMaintenance(equipmentData: any) {
+  async analyzePredictiveMaintenance(equipmentData: Record<string, unknown>) {
     return this.apiCall('/ai-agents/maintenance/analyze', {
       method: 'POST',
       body: JSON.stringify({ equipmentData }),
@@ -149,7 +149,7 @@ class AIAgentAPIService {
   }
 
   // Weather Intelligence
-  async analyzeWeatherIntelligence(currentWeather?: any, forecast?: any) {
+  async analyzeWeatherIntelligence(currentWeather?: Record<string, unknown>, forecast?: Record<string, unknown>) {
     return this.apiCall('/ai-agents/weather/analyze', {
       method: 'POST',
       body: JSON.stringify({ currentWeather, forecast }),
@@ -157,7 +157,7 @@ class AIAgentAPIService {
   }
 
   // Computer Vision
-  async analyzeComputerVision(imageData: any, analysisType?: string) {
+  async analyzeComputerVision(imageData: unknown, analysisType?: string) {
     return this.apiCall('/ai-agents/vision/analyze', {
       method: 'POST',
       body: JSON.stringify({ imageData, analysisType }),
@@ -170,7 +170,7 @@ class AIAgentAPIService {
   }
 
   // Drone Pilot AI - Mission Planning
-  async planDroneMission(missionData: any) {
+  async planDroneMission(missionData: Record<string, unknown>) {
     return this.apiCall('/ai-agents/drone/mission-plan', {
       method: 'POST',
       body: JSON.stringify(missionData),
@@ -192,7 +192,7 @@ class AIAgentAPIService {
   }
 
   // Content Creation Agent - Plan Content Capture
-  async planContentCapture(contentPlan: any) {
+  async planContentCapture(contentPlan: Record<string, unknown>) {
     return this.apiCall('/ai-agents/content/plan-capture', {
       method: 'POST',
       body: JSON.stringify(contentPlan),
@@ -212,7 +212,7 @@ class AIAgentAPIService {
   }
 
   // Customer Service AI - Handle Inquiry
-  async handleCustomerInquiry(inquiryData: any) {
+  async handleCustomerInquiry(inquiryData: Record<string, unknown>) {
     return this.apiCall('/ai-agents/customer-service/inquiry', {
       method: 'POST',
       body: JSON.stringify(inquiryData),
@@ -220,7 +220,7 @@ class AIAgentAPIService {
   }
 
   // Customer Service AI - Simulate Phone Call
-  async simulatePhoneCall(callData: any) {
+  async simulatePhoneCall(callData: Record<string, unknown>) {
     return this.apiCall('/ai-agents/customer-service/phone-call', {
       method: 'POST',
       body: JSON.stringify(callData),
@@ -228,7 +228,7 @@ class AIAgentAPIService {
   }
 
   // Customer Service AI - Process Email
-  async processEmail(emailData: any) {
+  async processEmail(emailData: Record<string, unknown>) {
     return this.apiCall('/ai-agents/customer-service/email', {
       method: 'POST',
       body: JSON.stringify(emailData),
@@ -248,7 +248,7 @@ class AIAgentAPIService {
     mission_type: string;
     area: string;
     priority?: string;
-    weather_conditions?: any;
+    weather_conditions?: Record<string, unknown>;
   }) {
     return this.apiCall('/ai-agents/drone-pilot/advanced-mission', {
       method: 'POST',
@@ -347,7 +347,7 @@ class AIAgentAPIService {
     agents: string[];
     context: string;
     priority: string;
-    constraints: any;
+    constraints: Record<string, unknown>;
   }) {
     return this.apiCall('/ai-agents/crew/decision', {
       method: 'POST',
@@ -360,7 +360,7 @@ class AIAgentAPIService {
     sourceAgent: string;
     targetAgents: string[];
     knowledgeType: string;
-    content: any;
+    content: unknown;
     confidence: number;
   }) {
     return this.apiCall('/ai-agents/knowledge/share', {

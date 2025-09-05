@@ -168,7 +168,7 @@ class AuthService {
   }
 
   // Check if user can perform action
-  canPerformAction(action: string, resource?: string): boolean {
+  canPerformAction(action: string, _resource?: string): boolean {
     if (!this.currentUser) return false
 
     const permissions = this.getPermissions(this.currentUser.role)
@@ -270,7 +270,7 @@ class AuthService {
   }
 
   // Set session data
-  private async setSession(session: any): Promise<void> {
+  private async setSession(session: { access_token: string; refresh_token: string; user?: { id: string } }): Promise<void> {
     this.accessToken = session.access_token
     this.refreshToken = session.refresh_token
 

@@ -1,8 +1,9 @@
+import { Battery, Thermometer, Navigation, ArrowUp, Droplets, TestTube, Zap, FlaskConical, ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Battery, Thermometer, Navigation, ArrowUp, Droplets, TestTube, Zap, FlaskConical, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 type TelemetryPoint = {
   timestamp: string;
@@ -66,7 +67,7 @@ function useTelemetryFeed() {
         const resp = await fetch('http://localhost:3001/api/telemetry/history?limit=60');
         if (resp.ok) {
           const result = await resp.json();
-          const mapped: TelemetryPoint[] = (result.data || []).map((row: any, index: number) => ({
+          const mapped: TelemetryPoint[] = (result.data || []).map((row: Record<string, unknown>, index: number) => ({
             timestamp: row.timestamp,
             altitude: row.altitude ?? 0,
             speed: row.speed ?? 0,
@@ -82,7 +83,7 @@ function useTelemetryFeed() {
           })).reverse(); // oldest -> newest for charting
           if (isMounted) setData(mapped);
         }
-      } catch (err) {
+      } catch {
         // ignore; UI will show empty state
       }
     };
@@ -113,7 +114,7 @@ function useTelemetryFeed() {
               return next.slice(-120); // keep last 120 points
             });
           }
-        } catch (_) {
+        } catch {
           // ignore bad frames
         }
       };

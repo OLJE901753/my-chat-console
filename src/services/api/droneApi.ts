@@ -10,7 +10,7 @@ export interface ApiResponse<T> {
 
 export interface DroneCommand {
   command: string;
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
 }
 
 // Drone API functions
@@ -26,7 +26,7 @@ export const droneApi = {
   },
 
   // Execute drone command
-  executeCommand: async (command: DroneCommand): Promise<ApiResponse<any>> => {
+  executeCommand: async (command: DroneCommand): Promise<ApiResponse<unknown>> => {
     const response = await fetch(`${API_BASE_URL}/drone/command`, {
       method: 'POST',
       headers: {
@@ -43,7 +43,7 @@ export const droneApi = {
   },
 
   // Connect to drone
-  connect: async (): Promise<ApiResponse<any>> => {
+  connect: async (): Promise<ApiResponse<unknown>> => {
     const response = await fetch(`${API_BASE_URL}/drone/connect`, {
       method: 'POST',
     });
@@ -56,7 +56,7 @@ export const droneApi = {
   },
 
   // Disconnect from drone
-  disconnect: async (): Promise<ApiResponse<any>> => {
+  disconnect: async (): Promise<ApiResponse<unknown>> => {
     const response = await fetch(`${API_BASE_URL}/drone/disconnect`, {
       method: 'POST',
     });
@@ -69,7 +69,7 @@ export const droneApi = {
   },
 
   // Get command history
-  getCommandHistory: async (limit: number = 50): Promise<any[]> => {
+  getCommandHistory: async (limit: number = 50): Promise<unknown[]> => {
     const response = await fetch(`${API_BASE_URL}/drone/commands?limit=${limit}`);
     if (!response.ok) {
       throw new Error('Failed to fetch command history');
@@ -79,7 +79,7 @@ export const droneApi = {
   },
 
   // Get photos
-  getPhotos: async (limit: number = 20): Promise<any[]> => {
+  getPhotos: async (limit: number = 20): Promise<unknown[]> => {
     const response = await fetch(`${API_BASE_URL}/drone/photos?limit=${limit}`);
     if (!response.ok) {
       throw new Error('Failed to fetch photos');
@@ -89,7 +89,7 @@ export const droneApi = {
   },
 
   // Get recordings
-  getRecordings: async (limit: number = 20): Promise<any[]> => {
+  getRecordings: async (limit: number = 20): Promise<unknown[]> => {
     const response = await fetch(`${API_BASE_URL}/drone/recordings?limit=${limit}`);
     if (!response.ok) {
       throw new Error('Failed to fetch recordings');
@@ -159,7 +159,7 @@ export const missionApi = {
   },
 
   // Start mission
-  startMission: async (missionId: string): Promise<ApiResponse<any>> => {
+  startMission: async (missionId: string): Promise<ApiResponse<unknown>> => {
     const response = await fetch(`${API_BASE_URL}/missions/${missionId}/start`, {
       method: 'POST',
     });
@@ -172,7 +172,7 @@ export const missionApi = {
   },
 
   // Pause mission
-  pauseMission: async (missionId: string): Promise<ApiResponse<any>> => {
+  pauseMission: async (missionId: string): Promise<ApiResponse<unknown>> => {
     const response = await fetch(`${API_BASE_URL}/missions/${missionId}/pause`, {
       method: 'POST',
     });
@@ -185,7 +185,7 @@ export const missionApi = {
   },
 
   // Stop mission
-  stopMission: async (missionId: string): Promise<ApiResponse<any>> => {
+  stopMission: async (missionId: string): Promise<ApiResponse<unknown>> => {
     const response = await fetch(`${API_BASE_URL}/missions/${missionId}/stop`, {
       method: 'POST',
     });

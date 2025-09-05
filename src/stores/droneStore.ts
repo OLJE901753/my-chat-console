@@ -67,6 +67,7 @@ interface DroneStore {
   updateStatus: (status: Partial<DroneStatus>) => void;
   setConnected: (connected: boolean) => void;
   addMission: (mission: Mission) => void;
+  setMissions: (missions: Mission[]) => void;
   updateMission: (missionId: string, updates: Partial<Mission>) => void;
   deleteMission: (missionId: string) => void;
   setActiveMission: (mission: Mission | null) => void;
@@ -114,7 +115,7 @@ const initialSettings: DroneSettings = {
 
 export const useDroneStore = create<DroneStore>()(
   devtools(
-    (set, get) => ({
+    (set, _get) => ({
       // Initial state
       status: initialStatus,
       missions: [],
@@ -138,6 +139,9 @@ export const useDroneStore = create<DroneStore>()(
         set((state) => ({
           missions: [...state.missions, mission]
         })),
+
+      setMissions: (missions) =>
+        set({ missions }),
 
       updateMission: (missionId, updates) =>
         set((state) => ({

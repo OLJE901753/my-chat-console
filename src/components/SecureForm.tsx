@@ -1,11 +1,13 @@
+/* eslint-disable react-refresh/only-export-components */
+import DOMPurify from 'dompurify'
 import React, { useState, useCallback, useEffect } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import DOMPurify from 'dompurify'
 
 // CSRF token management
 let csrfToken: string | null = null

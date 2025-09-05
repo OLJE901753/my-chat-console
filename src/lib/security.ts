@@ -85,17 +85,17 @@ export const sanitizationLevels = {
   strict: {
     ALLOWED_TAGS: [],
     ALLOWED_ATTR: [],
-    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i
   },
   moderate: {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
     ALLOWED_ATTR: ['href', 'target'],
-    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i
   },
   permissive: {
     ALLOWED_TAGS: ['*'],
     ALLOWED_ATTR: ['*'],
-    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i
   }
 }
 
@@ -225,11 +225,11 @@ export const securityUtils = {
   },
 
   // Sanitize sensitive data for logging
-  sanitizeForLogging: (data: any): any => {
+  sanitizeForLogging: (data: unknown): unknown => {
     const sensitiveFields = auditConfig.sensitiveFields
     
     if (typeof data === 'object' && data !== null) {
-      const sanitized = { ...data }
+      const sanitized: Record<string, unknown> = { ...(data as Record<string, unknown>) }
       
       for (const field of sensitiveFields) {
         if (field in sanitized) {

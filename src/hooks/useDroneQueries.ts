@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { droneApi, missionApi } from '@/services/api/droneApi';
 import { useDroneStore } from '@/stores/droneStore';
 import { Mission } from '@/stores/droneStore';
@@ -161,7 +162,7 @@ export const useMissionMutations = () => {
       setLoading(true);
       setError(null);
     },
-    onSuccess: (newMission) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: droneQueryKeys.missions() });
     },
     onError: (error) => {
@@ -216,7 +217,7 @@ export const useMissionMutations = () => {
       setLoading(true);
       setError(null);
     },
-    onSuccess: (_, missionId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: droneQueryKeys.missions() });
       queryClient.invalidateQueries({ queryKey: droneQueryKeys.status() });
     },

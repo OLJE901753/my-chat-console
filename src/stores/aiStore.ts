@@ -123,7 +123,7 @@ const initialStats: AIStats = {
 
 export const useAIStore = create<AIStore>()(
   devtools(
-    (set, get) => ({
+    (set, _get) => ({
       // Initial state
       agents: [],
       missions: [],

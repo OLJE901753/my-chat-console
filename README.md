@@ -1,73 +1,104 @@
-# Welcome to your Lovable project
+# my-chat-console
 
-## Project info
+Private web dashboard applying AI on a Norwegian farm.
 
-**URL**: https://lovable.dev/projects/888756b1-3bb9-4abb-bc5e-af16b4d58118
+## Overview
+- Frontend: React + TypeScript + Vite + Tailwind + shadcn/ui
+- Backend: Node (Express API + SSE) under `server/`
+- AI Services: Python 3.11 (CrewAI agents) under `farm_ai_crew/`
+- Data: Supabase (Auth, Postgres, Storage)
+- Real-time: SSE
+- State: Zustand, TanStack Query
 
-## How can I edit this code?
+See `WORLD_CLASS_CONTEXT.md` and `docs/ARCHITECTURE.md` for context & diagrams.
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/888756b1-3bb9-4abb-bc5e-af16b4d58118) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+## Quickstart (Frontend)
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+pnpm i   # or npm i
+pnpm dev # or npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Quickstart (Backend)
+```sh
+cd server
+npm i
+npm start
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Quickstart (Python AI)
+```powershell
+py -3.11 -m venv .venv311
+.\.venv311\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r farm_ai_crew/requirements_basic.txt
+python -m farm_ai_crew.main --help
+```
 
-**Use GitHub Codespaces**
+## CI / Quality
+- GitHub Actions CI: Node (typecheck/lint/build) and Python (ruff/mypy/pytest)
+- Formatting: Prettier, `.editorconfig`
+- Python lint/type: Ruff, mypy
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Prompts
+Prompts for Manager/Frontend/DB live in `prompts/`.
 
-## What technologies are used for this project?
+## Supabase quickstart
+```sh
+# Install Supabase CLI
+npm i -g supabase
 
-This project is built with:
+# Start local stack (optional)
+supabase start
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Apply migrations
+supabase migration up --db-url "$SUPABASE_DB_URL" --dir infra/supabase/migrations
 
-## How can I deploy this project?
+# Seed data
+psql "$SUPABASE_DB_URL" -f infra/supabase/seeds/0001_seed.sql
 
-Simply open [Lovable](https://lovable.dev/projects/888756b1-3bb9-4abb-bc5e-af16b4d58118) and click on Share -> Publish.
+# Storage: ensure private bucket exists (migration attempts to create)
+# RLS is disabled for MVP; policies placeholders in infra/supabase/policies
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Architecture (Mermaid)
+```mermaid
+flowchart LR
+  User[Owner/Worker]-->FE[React+Vite Dashboard]
+  FE<-->BE[Node API / SSE]
+  FE<-->Supabase[(Auth/DB/Storage)]
+  BE<-->AI[AI Manager (FastAPI)]
+  BE<-->Drone[Drone Agent]
+  AI<-->Supabase
+  Drone-->Media[Media Uploads]
+```
 
-Yes, you can!
+## Scripts
+| Script | Description |
+|---|---|
+| `pnpm dev` | Start frontend (Vite) |
+| `pnpm build` | Build frontend |
+| `pnpm preview` | Preview build |
+| `pnpm typecheck` | TypeScript typecheck |
+| `pnpm lint` | ESLint check |
+| `pnpm test` | Vitest unit tests |
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Environment Variables (selected)
+| Key | Purpose |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase URL (frontend) |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key (frontend) |
+| `VITE_API_BASE_URL` | Backend base URL |
+| `VITE_SENTRY_DSN` | Frontend Sentry DSN |
+| `SENTRY_DSN` | AI Manager Sentry DSN |
+| `OPENAI_API_KEY` | LLM provider key |
+| `ANTHROPIC_API_KEY` | LLM provider key |
+| `AI_PROVIDER_PRIMARY` | openai|anthropic |
+| `AI_PROVIDER_FALLBACK` | openai|anthropic |
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## FAQs
+- Q: Why private routes only?  
+  A: Dashboard is private for owner/workers per project scope.
+- Q: Why SSE and not WebSockets?  
+  A: SSE is simpler for dashboard events; future manual control may use WebRTC/UDP.
+- Q: Windows dev and Chroma issues?  
+  A: JSON memory fallback included; enable Chroma later when toolchain is ready.

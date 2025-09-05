@@ -4,15 +4,15 @@ export interface ApiError {
   message: string;
   status?: number;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export class ApiClientError extends Error {
   public status?: number;
   public code?: string;
-  public details?: any;
+  public details?: unknown;
 
-  constructor(message: string, status?: number, code?: string, details?: any) {
+  constructor(message: string, status?: number, code?: string, details?: unknown) {
     super(message);
     this.name = 'ApiClientError';
     this.status = status;
@@ -36,7 +36,7 @@ export class ApiClient {
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       let errorCode = response.status.toString();
-      let errorDetails: any = null;
+      let errorDetails: unknown = null;
 
       try {
         const errorData = await response.json();
@@ -58,7 +58,7 @@ export class ApiClient {
 
     try {
       return await response.json();
-    } catch (error) {
+    } catch {
       throw new ApiClientError('Failed to parse response', response.status, 'PARSE_ERROR');
     }
   }
@@ -85,7 +85,7 @@ export class ApiClient {
       }
 
       // Handle network errors
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (error instanceof TypeError && (error as TypeError).message.includes('fetch')) {
         throw new ApiClientError(
           'Network error: Unable to connect to server',
           0,
@@ -103,11 +103,8 @@ export class ApiClient {
       }
 
       // Generic error fallback
-      throw new ApiClientError(
-        error instanceof Error ? error.message : 'An unexpected error occurred',
-        0,
-        'UNKNOWN_ERROR'
-      );
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      throw new ApiClientError(message, 0, 'UNKNOWN_ERROR');
     }
   }
 
@@ -118,7 +115,7 @@ export class ApiClient {
     });
   }
 
-  async post<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
@@ -126,7 +123,7 @@ export class ApiClient {
     });
   }
 
-  async put<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
+  async put<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
@@ -141,7 +138,7 @@ export class ApiClient {
     });
   }
 
-  async patch<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
+  async patch<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PATCH',

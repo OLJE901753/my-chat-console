@@ -54,7 +54,7 @@ export interface Database {
           id: string
           name: string
           description: string | null
-          coordinates: any // PostGIS polygon
+          coordinates: unknown // PostGIS polygon
           area_hectares: number
           crop_type: string
           planting_date: string | null
@@ -66,7 +66,7 @@ export interface Database {
           id?: string
           name: string
           description?: string | null
-          coordinates: any
+          coordinates: unknown
           area_hectares: number
           crop_type: string
           planting_date?: string | null
@@ -78,7 +78,7 @@ export interface Database {
           id?: string
           name?: string
           description?: string | null
-          coordinates?: any
+          coordinates?: unknown
           area_hectares?: number
           crop_type?: string
           planting_date?: string | null
@@ -92,10 +92,10 @@ export interface Database {
           id: string
           name: string
           type: 'soil_moisture' | 'temperature' | 'humidity' | 'wind_speed' | 'rainfall' | 'solar_radiation' | 'air_quality'
-          location: any // PostGIS point
+          location: unknown // PostGIS point
           zone_id: string
           status: 'active' | 'inactive' | 'maintenance' | 'error'
-          last_reading: any | null
+          last_reading: unknown | null
           last_reading_time: string | null
           battery_level: number | null
           created_at: string
@@ -105,10 +105,10 @@ export interface Database {
           id?: string
           name: string
           type: 'soil_moisture' | 'temperature' | 'humidity' | 'wind_speed' | 'rainfall' | 'solar_radiation' | 'air_quality'
-          location: any
+          location: unknown
           zone_id: string
           status: 'active' | 'inactive' | 'maintenance' | 'error'
-          last_reading?: any | null
+          last_reading?: unknown | null
           last_reading_time?: string | null
           battery_level?: number | null
           created_at?: string
@@ -118,10 +118,10 @@ export interface Database {
           id?: string
           name?: string
           type?: 'soil_moisture' | 'temperature' | 'humidity' | 'wind_speed' | 'rainfall' | 'solar_radiation' | 'air_quality'
-          location?: any
+          location?: unknown
           zone_id?: string
           status?: 'active' | 'inactive' | 'maintenance' | 'error'
-          last_reading?: any | null
+          last_reading?: unknown | null
           last_reading_time?: string | null
           battery_level?: number | null
           created_at?: string
@@ -132,27 +132,27 @@ export interface Database {
         Row: {
           id: string
           sensor_id: string
-          reading: any
+          reading: unknown
           timestamp: string
-          location: any
+          location: unknown
           quality_score: number
           created_at: string
         }
         Insert: {
           id?: string
           sensor_id: string
-          reading: any
+          reading: unknown
           timestamp: string
-          location: any
+          location: unknown
           quality_score: number
           created_at?: string
         }
         Update: {
           id?: string
           sensor_id?: string
-          reading?: any
+          reading?: unknown
           timestamp?: string
-          location?: any
+          location?: unknown
           quality_score?: number
           created_at?: string
         }
@@ -163,7 +163,7 @@ export interface Database {
           name: string
           model: string
           status: 'idle' | 'flying' | 'charging' | 'maintenance' | 'error'
-          current_location: any | null
+          current_location: unknown | null
           battery_level: number
           last_flight: string | null
           total_flight_hours: number
@@ -175,7 +175,7 @@ export interface Database {
           name: string
           model: string
           status: 'idle' | 'flying' | 'charging' | 'maintenance' | 'error'
-          current_location?: any | null
+          current_location?: unknown | null
           battery_level: number
           last_flight?: string | null
           total_flight_hours?: number
@@ -187,7 +187,7 @@ export interface Database {
           name?: string
           model?: string
           status?: 'idle' | 'flying' | 'charging' | 'maintenance' | 'error'
-          current_location?: any | null
+          current_location?: unknown | null
           battery_level?: number
           last_flight?: string | null
           total_flight_hours?: number
@@ -201,7 +201,7 @@ export interface Database {
           drone_id: string
           mission_type: 'surveillance' | 'mapping' | 'spraying' | 'monitoring'
           status: 'planned' | 'active' | 'completed' | 'cancelled' | 'error'
-          flight_path: any | null
+          flight_path: unknown | null
           start_time: string | null
           end_time: string | null
           created_at: string
@@ -212,7 +212,7 @@ export interface Database {
           drone_id: string
           mission_type: 'surveillance' | 'mapping' | 'spraying' | 'monitoring'
           status: 'planned' | 'active' | 'completed' | 'cancelled' | 'error'
-          flight_path?: any | null
+          flight_path?: unknown | null
           start_time?: string | null
           end_time?: string | null
           created_at?: string
@@ -223,7 +223,7 @@ export interface Database {
           drone_id?: string
           mission_type?: 'surveillance' | 'mapping' | 'spraying' | 'monitoring'
           status?: 'planned' | 'active' | 'completed' | 'cancelled' | 'error'
-          flight_path?: any | null
+          flight_path?: unknown | null
           start_time?: string | null
           end_time?: string | null
           created_at?: string
@@ -234,7 +234,7 @@ export interface Database {
         Row: {
           id: string
           name: string
-          location: any
+          location: unknown
           elevation: number
           status: 'active' | 'inactive' | 'maintenance'
           last_update: string | null
@@ -244,7 +244,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          location: any
+          location: unknown
           elevation: number
           status: 'active' | 'inactive' | 'maintenance'
           last_update?: string | null
@@ -254,7 +254,7 @@ export interface Database {
         Update: {
           id?: string
           name?: string
-          location?: any
+          location?: unknown
           elevation?: number
           status?: 'active' | 'inactive' | 'maintenance'
           last_update?: string | null
@@ -309,7 +309,7 @@ export interface Database {
           satellite: string
           data_type: 'ndvi' | 'soil_moisture' | 'temperature' | 'precipitation'
           timestamp: string
-          coverage_area: any
+          coverage_area: unknown
           data_url: string
           processed: boolean
           created_at: string
@@ -319,7 +319,7 @@ export interface Database {
           satellite: string
           data_type: 'ndvi' | 'soil_moisture' | 'temperature' | 'precipitation'
           timestamp: string
-          coverage_area: any
+          coverage_area: unknown
           data_url: string
           processed?: boolean
           created_at?: string
@@ -329,7 +329,7 @@ export interface Database {
           satellite?: string
           data_type?: 'ndvi' | 'soil_moisture' | 'temperature' | 'precipitation'
           timestamp?: string
-          coverage_area?: any
+          coverage_area?: unknown
           data_url?: string
           processed?: boolean
           created_at?: string
@@ -340,7 +340,7 @@ export interface Database {
           id: string
           name: string
           description: string | null
-          boundary: any // PostGIS polygon
+          boundary: unknown // PostGIS polygon
           active: boolean
           restrictions: string[] // ['no_drones', 'no_vehicles', 'restricted_access']
           created_at: string
@@ -350,7 +350,7 @@ export interface Database {
           id?: string
           name: string
           description?: string | null
-          boundary: any
+          boundary: unknown
           active: boolean
           restrictions?: string[]
           created_at?: string
@@ -360,7 +360,7 @@ export interface Database {
           id?: string
           name?: string
           description?: string | null
-          boundary?: any
+          boundary?: unknown
           active?: boolean
           restrictions?: string[]
           created_at?: string

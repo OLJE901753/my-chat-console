@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { sseService } from '@/services/sseService';
-import { Card, CardContent } from '@/components/ui/card';
+/* eslint-disable react-refresh/only-export-components */
+import { Activity, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wifi, WifiOff, RefreshCw, Activity } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { sseService } from '@/services/sseService';
 
 interface RealtimeContextType {
   connected: boolean;
@@ -13,7 +15,7 @@ interface RealtimeContextType {
   lastActivity: Date | null;
   connect: () => Promise<void>;
   disconnect: () => void;
-  subscribe: (type: string, callback: (data: any) => void) => () => void;
+  subscribe: <T>(type: string, callback: (data: T) => void) => () => void;
 }
 
 const RealtimeContext = createContext<RealtimeContextType | null>(null);
@@ -25,15 +27,16 @@ interface RealtimeProviderProps {
 
 const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
   children,
-  showStatusIndicator = true,
+  showStatusIndicator = false,
 }) => {
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastActivity, setLastActivity] = useState<Date | null>(null);
   const { toast } = useToast();
+  const hasShownConnectToastRef = React.useRef(false);
 
-  const connect = async () => {
+  const connect = React.useCallback(async (): Promise<void> => {
     if (connecting || connected) return;
     
     setConnecting(true);
@@ -43,10 +46,13 @@ const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
       await sseService.connect();
       setConnected(true);
       setLastActivity(new Date());
-      toast({
-        title: "Connected",
-        description: "Real-time data connection established",
-      });
+      if (!hasShownConnectToastRef.current) {
+        toast({
+          title: "Connected",
+          description: "Real-time data connection established",
+        });
+        hasShownConnectToastRef.current = true;
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Connection failed';
       setError(errorMessage);
@@ -55,16 +61,16 @@ const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
     } finally {
       setConnecting(false);
     }
-  };
+  }, [connecting, connected, toast]);
 
-  const disconnect = () => {
+  const disconnect = React.useCallback((): void => {
     sseService.disconnect();
     setConnected(false);
     setError(null);
-  };
+  }, []);
 
-  const subscribe = (type: string, callback: (data: any) => void) => {
-    return sseService.subscribe(type, (data) => {
+  const subscribe = <T,>(type: string, callback: (data: T) => void) => {
+    return sseService.subscribe(type, (data: T) => {
       setLastActivity(new Date());
       callback(data);
     });
@@ -84,7 +90,7 @@ const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
       clearTimeout(timer);
       disconnect();
     };
-  }, []);
+  }, [connect, disconnect]);
 
   const contextValue: RealtimeContextType = {
     connected,

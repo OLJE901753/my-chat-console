@@ -1,54 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { 
+  BarChart3,
   Brain, 
-  Map, 
   Camera, 
-  Zap, 
-  Shield, 
-  TrendingUp, 
-  Play, 
-  Pause, 
-  Square,
+  Eye,
+  Lightbulb,
+  Map, 
+  Route,
   RotateCcw,
   Settings,
-  BarChart3,
-  Lightbulb,
+  Shield, 
+  Square,
   Target,
-  Route,
-  Clock,
-  Battery,
-  Wind,
   Thermometer,
-  Eye
+  Wind,
+  Zap
 } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+
+interface Waypoint { lat: number; lng: number; alt?: number; action?: string }
 
 interface AIMission {
   id: string;
   type: string;
   status: string;
   flightConfiguration: {
-    route: any[];
+    route: Waypoint[];
     altitude: number;
     speed: number;
     estimatedDuration: number;
   };
   dataCollection: {
-    photography: any[];
-    videography: any[];
-    sensors: any[];
-    investigations: any[];
+    photography: Array<Record<string, unknown>>;
+    videography: Array<Record<string, unknown>>;
+    sensors: Array<Record<string, unknown>>;
+    investigations: Array<Record<string, unknown>>;
   };
   aiInstructions: {
-    decisionThresholds: any;
-    contingencyProcedures: any;
+    decisionThresholds: Record<string, unknown>;
+    contingencyProcedures: Record<string, unknown>;
     realTimeAdjustments: boolean;
     learningEnabled: boolean;
   };
@@ -56,8 +54,8 @@ interface AIMission {
     maxWindSpeed: number;
     minVisibility: number;
     maxTemperature: number;
-    emergencyLandingZones: any[];
-    geofencing: any;
+    emergencyLandingZones: Array<Record<string, unknown>>;
+    geofencing: Record<string, unknown>;
   };
 }
 
@@ -79,7 +77,7 @@ const AIMissionPlanner: React.FC = () => {
   const [currentMission, setCurrentMission] = useState<AIMission | null>(null);
   const [aiStats, setAiStats] = useState<AIStats | null>(null);
   const [farmId, setFarmId] = useState('FARM_001');
-  const [objectives, setObjectives] = useState<string[]>([]);
+  // const [objectives, setObjectives] = useState<string[]>([]);
   const [selectedObjectives, setSelectedObjectives] = useState<string[]>([]);
 
   const availableObjectives = [
@@ -94,21 +92,23 @@ const AIMissionPlanner: React.FC = () => {
     'OBSTACLE_HEAVY'
   ];
 
-  useEffect(() => {
-    loadAIStats();
-  }, []);
-
-  const loadAIStats = async () => {
+  const loadAIStats = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:3001/api/ai-missions/stats/${farmId}`);
       if (response.ok) {
         const data = await response.json();
         setAiStats(data.stats);
       }
-    } catch (error) {
+    } catch {
       console.error('Failed to load AI stats:', error);
     }
-  };
+  }, [farmId]);
+
+  useEffect(() => {
+    loadAIStats();
+  }, [loadAIStats]);
+
+  // moved into useCallback above
 
   const generateAIMission = async () => {
     if (selectedObjectives.length === 0) {
@@ -144,7 +144,7 @@ const AIMissionPlanner: React.FC = () => {
       } else {
         throw new Error('Failed to generate AI mission');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Mission Generation Failed",
         description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -165,13 +165,15 @@ const AIMissionPlanner: React.FC = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         toast({
           title: "AI Test Successful",
           description: "All AI capabilities are functioning correctly.",
         });
+      } else {
+        throw new Error('Test endpoint returned non-OK');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "AI Test Failed",
         description: "Some AI capabilities may not be working properly.",

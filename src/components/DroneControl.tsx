@@ -1,16 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useRealtime } from '@/components/RealtimeProvider';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { 
   Camera, 
-  Video, 
   RotateCcw, 
   ArrowUp, 
   ArrowDown, 
@@ -23,24 +12,58 @@ import {
   Thermometer,
   Navigation,
   MapPin,
-  Settings,
   History,
   Plus,
   Save,
   Loader2,
   Brain,
-  Zap,
   Eye,
   Wind,
-  Sun,
   Cloud,
-  Target,
   Route,
   Shield,
-  TrendingUp,
   CheckCircle
 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+import { useRealtime } from '@/components/RealtimeProvider';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+
+// Minimal shared types to replace "any"
+interface Waypoint {
+  lat: number;
+  lng: number;
+  alt: number;
+  action: string;
+  camera?: string;
+  id?: string;
+  order?: number;
+  estimatedTime?: number;
+}
+
+interface WeatherConditions {
+  windSpeed: number;
+  windDirection: number;
+  visibility: number;
+  precipitation: number;
+  temperature: number;
+  humidity: number;
+}
+
+interface SafetyStatus {
+  obstacleDetected: boolean;
+  geofenceViolation: boolean;
+  lowBattery: boolean;
+  weatherWarning: boolean;
+  emergencyMode: boolean;
+}
 
 interface DroneStatus {
   connected: boolean;
@@ -50,36 +73,23 @@ interface DroneStatus {
   temperature: number;
   position: { x: number; y: number; z: number };
   orientation: { yaw: number; pitch: number; roll: number };
-  mission: any;
+  mission: Mission | null;
   lastUpdate: string;
-  weatherConditions: {
-    windSpeed: number;
-    windDirection: number;
-    visibility: number;
-    precipitation: number;
-    temperature: number;
-    humidity: number;
-  };
-  safetyStatus: {
-    obstacleDetected: boolean;
-    geofenceViolation: boolean;
-    lowBattery: boolean;
-    weatherWarning: boolean;
-    emergencyMode: boolean;
-  };
+  weatherConditions: WeatherConditions;
+  safetyStatus: SafetyStatus;
 }
 
 interface Mission {
   id: string;
   name: string;
   description: string;
-  waypoints: any[];
+  waypoints: Waypoint[];
   status: string;
   type: 'surveillance' | 'cinematic' | 'mapping' | 'inspection' | 'content';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   estimatedDuration: number;
-  weatherConditions: any;
-  safetyChecks: any;
+  weatherConditions: WeatherConditions;
+  safetyChecks: { passed: boolean } | Record<string, unknown>;
   confidence: number;
 }
 
@@ -89,8 +99,8 @@ interface AIDroneMission {
   type: 'cinematic' | 'surveillance' | 'content_creation' | 'emergency';
   target: string;
   duration: number;
-  waypoints: any[];
-  cameraSettings: any;
+  waypoints: Waypoint[];
+  cameraSettings: CameraSettings;
   movementPattern: string;
   lightingOptimization: boolean;
   obstacleAvoidance: boolean;
@@ -98,6 +108,15 @@ interface AIDroneMission {
   confidence: number;
   status: 'planned' | 'executing' | 'completed' | 'failed';
 }
+
+type CameraSettings = {
+  resolution: '4K' | '1080p';
+  frameRate: number;
+  iso: number;
+  shutterSpeed: string;
+  whiteBalance: 'auto' | 'daylight';
+  focus: 'auto' | 'manual';
+};
 
 const DroneControl: React.FC = () => {
   const { toast } = useToast();
@@ -131,15 +150,13 @@ const DroneControl: React.FC = () => {
   
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeMission, setActiveMission] = useState<Mission | null>(null);
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [commandHistory, setCommandHistory] = useState<any[]>([]);
-  const [photos, setPhotos] = useState<any[]>([]);
-  const [recordings, setRecordings] = useState<any[]>([]);
+  const [commandHistory, setCommandHistory] = useState<Array<{ command: string; timestamp: string }>>([]);
+  const [photos, setPhotos] = useState<Array<{ id: string; timestamp: string }>>([]);
+  const [recordings, setRecordings] = useState<Array<{ id: string; start_time: string; duration: number }>>([]);
   
   // AI Mission Planning
   const [aiMissions, setAiMissions] = useState<AIDroneMission[]>([]);
-  const [selectedAIMission, setSelectedAIMission] = useState<AIDroneMission | null>(null);
+  // const [selectedAIMission, setSelectedAIMission] = useState<AIDroneMission | null>(null);
   const [aiPlanningMode, setAiPlanningMode] = useState<'automatic' | 'manual' | 'hybrid'>('automatic');
   
   // Movement controls
@@ -147,18 +164,18 @@ const DroneControl: React.FC = () => {
   const [rotateDegrees, setRotateDegrees] = useState(90);
   const [droneSpeed, setDroneSpeed] = useState(50);
   
-  // AI Settings
-  const [aiSettings, setAiSettings] = useState({
-    obstacleAvoidance: true,
-    weatherAdaptation: true,
-    cinematicMode: true,
-    autoReturnHome: true,
-    emergencyProcedures: true,
-    geofencing: true,
-    maxAltitude: 120,
-    maxDistance: 500,
-    safetyMargin: 20
-  });
+  // AI Settings (unused currently) — commented to satisfy lint until used
+  // const [aiSettings, setAiSettings] = useState({
+  //   obstacleAvoidance: true,
+  //   weatherAdaptation: true,
+  //   cinematicMode: true,
+  //   autoReturnHome: true,
+  //   emergencyProcedures: true,
+  //   geofencing: true,
+  //   maxAltitude: 120,
+  //   maxDistance: 500,
+  //   safetyMargin: 20
+  // });
   
   // Mission planning
   const [newMission, setNewMission] = useState({
@@ -169,27 +186,57 @@ const DroneControl: React.FC = () => {
     priority: 'medium' as const
   });
   
-  const telemetryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // const telemetryIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use the shared realtime connection
+  const joinTelemetryRoom = useCallback(() => {
+    if (connected) {
+      send('join_room', {
+        room: 'drone_telemetry'
+      });
+    }
+  }, [connected, send]);
+
   useEffect(() => {
     setIsConnected(connected);
-    
     if (connected) {
       joinTelemetryRoom();
     }
-  }, [connected]);
+  }, [connected, joinTelemetryRoom]);
 
   // Subscribe to drone-related messages
   useEffect(() => {
-    if (connected) {
-      subscribe('drone_telemetry', handleWebSocketMessage);
-      subscribe('mission_progress', handleWebSocketMessage);
-      subscribe('agent_status', handleWebSocketMessage);
-    }
-  }, [connected, subscribe]);
+    if (!connected) return;
+    const unsub1 = subscribe('drone_telemetry', handleWebSocketMessage);
+    const unsub2 = subscribe('mission_progress', handleWebSocketMessage);
+    const unsub3 = subscribe('agent_status', handleWebSocketMessage);
+    return () => {
+      unsub1();
+      unsub2();
+      unsub3();
+    };
+  }, [connected, subscribe, handleWebSocketMessage]);
 
-  const handleWebSocketMessage = (data: any) => {
+  type TelemetryMsg = { type: 'drone_telemetry' } & Partial<DroneStatus>;
+  type MissionProgressMsg = { type: 'mission_progress' } & Mission;
+  type AgentStatusMsg = { type: 'agent_status'; message?: string; [key: string]: unknown };
+  type LegacyTelemetryMsg = { type: 'telemetry'; telemetry: Partial<DroneStatus> };
+  type LegacyMissionUpdateMsg = { type: 'mission_update'; mission: Mission };
+  type SafetyAlert = { message: string; severity: 'low' | 'medium' | 'high' };
+  type SafetyAlertMsg = { type: 'safety_alert'; alert: SafetyAlert };
+  type WeatherUpdateMsg = { type: 'weather_update'; weather: WeatherConditions };
+  type ObstacleDetectedMsg = { type: 'obstacle_detected' };
+  type DroneMessage =
+    | TelemetryMsg
+    | MissionProgressMsg
+    | AgentStatusMsg
+    | LegacyTelemetryMsg
+    | LegacyMissionUpdateMsg
+    | SafetyAlertMsg
+    | WeatherUpdateMsg
+    | ObstacleDetectedMsg;
+
+  const handleWebSocketMessage = useCallback((data: DroneMessage) => {
     // Handle different message types from the realtime service
     if (data.type === 'drone_telemetry') {
       setDroneStatus(prev => ({
@@ -198,7 +245,9 @@ const DroneControl: React.FC = () => {
         lastUpdate: new Date().toISOString()
       }));
     } else if (data.type === 'mission_progress') {
-      setActiveMission(data);
+      const missionShallow = { ...(data as Record<string, unknown>) };
+      delete (missionShallow as Record<string, unknown>).type;
+      setDroneStatus(prev => ({ ...prev, mission: missionShallow as Mission }));
     } else if (data.type === 'agent_status') {
       // Handle agent status updates if needed
       console.log('Agent status update:', data);
@@ -214,7 +263,7 @@ const DroneControl: React.FC = () => {
         }));
         break;
       case 'mission_update':
-        setActiveMission(data.mission);
+        setDroneStatus(prev => ({ ...prev, mission: data.mission }));
         break;
       case 'safety_alert':
         handleSafetyAlert(data.alert);
@@ -235,26 +284,21 @@ const DroneControl: React.FC = () => {
         }));
         break;
     }
-  };
+  }, [handleSafetyAlert]);
 
-  const handleSafetyAlert = (alert: any) => {
+  const handleSafetyAlert = useCallback((alert: { message: string; severity: 'low' | 'medium' | 'high' }) => {
     toast({
       title: "Safety Alert",
       description: alert.message,
       variant: alert.severity === 'high' ? 'destructive' : 'default'
     });
-  };
+  }, [toast]);
 
-  const joinTelemetryRoom = () => {
-    if (connected) {
-      send('join_room', {
-        room: 'drone_telemetry'
-      });
-    }
-  };
+
+  // joinTelemetryRoom wrapped in useCallback above
 
   // AI Mission Planning Functions
-  const generateAIMission = async (type: string, target: string) => {
+  const generateAIMission = async (type: AIDroneMission['type'], target: string) => {
     setIsLoading(true);
     try {
       // Simulate AI mission generation
@@ -263,7 +307,7 @@ const DroneControl: React.FC = () => {
       const newAIMission: AIDroneMission = {
         id: `ai_mission_${Date.now()}`,
         name: `${type.charAt(0).toUpperCase() + type.slice(1)} Mission - ${target}`,
-        type: type as any,
+        type,
         target,
         duration: Math.floor(15 + Math.random() * 45),
         waypoints: generateAIWaypoints(target, type),
@@ -281,7 +325,7 @@ const DroneControl: React.FC = () => {
         title: "AI Mission Generated",
         description: `New ${type} mission created for ${target}`
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Mission Generation Failed",
         description: "Could not generate AI mission",
@@ -292,9 +336,9 @@ const DroneControl: React.FC = () => {
     }
   };
 
-  const generateAIWaypoints = (target: string, type: string) => {
+  const generateAIWaypoints = (target: string, type: AIDroneMission['type']): Waypoint[] => {
     const baseCoords = { lat: 59.9139, lng: 10.7522 };
-    const waypoints = [];
+    const waypoints: Array<Omit<Waypoint, 'id' | 'order' | 'estimatedTime'>> = [];
     
     if (type === 'cinematic') {
       waypoints.push(
@@ -322,8 +366,8 @@ const DroneControl: React.FC = () => {
     }));
   };
 
-  const generateCameraSettings = (type: string) => {
-    const settings = {
+  const generateCameraSettings = (type: AIDroneMission['type']): CameraSettings => {
+    const settings: Record<string, CameraSettings> = {
       cinematic: {
         resolution: '4K',
         frameRate: 60,
@@ -350,10 +394,10 @@ const DroneControl: React.FC = () => {
       }
     };
     
-    return settings[type as keyof typeof settings] || settings.surveillance;
+    return settings[type] || settings.surveillance;
   };
 
-  const getMovementPattern = (type: string) => {
+  const getMovementPattern = (type: AIDroneMission['type']): string => {
     const patterns = {
       cinematic: 'Smooth, graceful movements with dramatic angles',
       content_creation: 'Dynamic movements optimized for social media',
@@ -361,7 +405,7 @@ const DroneControl: React.FC = () => {
       inspection: 'Precise positioning for detailed examination'
     };
     
-    return patterns[type as keyof typeof patterns] || patterns.surveillance;
+    return (patterns as Record<string, string>)[type] || patterns.surveillance;
   };
 
   const executeAIMission = async (mission: AIDroneMission) => {
@@ -388,7 +432,7 @@ const DroneControl: React.FC = () => {
         description: `AI-generated ${mission.type} mission`,
         waypoints: mission.waypoints,
         status: 'completed',
-        type: mission.type as any,
+        type: mission.type as AIDroneMission['type'],
         priority: 'medium',
         estimatedDuration: mission.duration,
         weatherConditions: droneStatus.weatherConditions,
@@ -396,7 +440,7 @@ const DroneControl: React.FC = () => {
         confidence: mission.confidence
       }]);
       
-    } catch (error) {
+    } catch {
       mission.status = 'failed';
       toast({
         title: "Mission Failed",
@@ -431,18 +475,18 @@ const DroneControl: React.FC = () => {
     });
   };
 
-  const returnToHome = () => {
-    if (connected) {
-      send('return_home', {
-        droneId: 'drone_01'
-      });
-    }
-    
-    toast({
-      title: "Return to Home",
-      description: "Drone returning to home position"
-    });
-  };
+  // const returnToHome = () => {
+  //   if (connected) {
+  //     send('return_home', {
+  //       droneId: 'drone_01'
+  //     });
+  //   }
+  //   
+  //   toast({
+  //     title: "Return to Home",
+  //     description: "Drone returning to home position"
+  //   });
+  // };
 
   // Basic flight control functions
   const handleTakeoff = () => {
@@ -519,7 +563,7 @@ const DroneControl: React.FC = () => {
   };
 
   // Execute drone command
-  const executeCommand = async (command: string, params: any = {}) => {
+  const executeCommand = async (command: string, params: Record<string, unknown> = {}) => {
     if (!isConnected) {
       toast({
         title: 'Not Connected',
@@ -547,14 +591,14 @@ const DroneControl: React.FC = () => {
           body: JSON.stringify({ command, params }),
         });
         
-        const result = await response.json();
+        const result: { success: boolean; data?: { message: string }; error?: string } = await response.json();
         if (result.success) {
           toast({
             title: 'Command Executed',
             description: result.data.message,
           });
         } else {
-          throw new Error(result.error);
+          throw new Error(result.error || 'Unknown error');
         }
       }
     } catch (error) {
@@ -834,7 +878,7 @@ const DroneControl: React.FC = () => {
                   <select
                     id="missionType"
                     className="w-full p-2 rounded-md bg-background border border-input"
-                    onChange={(e) => setNewMission(prev => ({ ...prev, type: e.target.value as any }))}
+                    onChange={(e) => setNewMission(prev => ({ ...prev, type: e.target.value as typeof prev.type }))}
                   >
                     <option value="cinematic">Cinematic</option>
                     <option value="content_creation">Content Creation</option>
@@ -863,7 +907,7 @@ const DroneControl: React.FC = () => {
                     id="aiPlanningMode"
                     className="w-full p-2 rounded-md bg-background border border-input"
                     value={aiPlanningMode}
-                    onChange={(e) => setAiPlanningMode(e.target.value as any)}
+                    onChange={(e) => setAiPlanningMode(e.target.value as typeof aiPlanningMode)}
                   >
                     <option value="automatic">Fully Automatic</option>
                     <option value="hybrid">Hybrid (AI + Manual)</option>

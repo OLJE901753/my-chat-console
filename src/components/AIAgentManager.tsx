@@ -1,47 +1,46 @@
+import { 
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  BarChart3, 
+  Brain, 
+  Camera, 
+  CheckCircle,
+  Cloud, 
+  Cpu, 
+  Download,
+  Droplets, 
+  GitBranch,
+  Network,
+  PhoneCall,
+  Play, 
+  Plus,
+  RefreshCw,
+  Route,
+  Settings,
+  Shield,
+  Square,
+  TrendingUp,
+  Users,
+  Workflow,
+  Zap,
+  Clock,
+  Eye,
+  Wrench,
+  
+} from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { aiAgentAPI } from '@/services/aiAgentService';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Brain, 
-  Eye, 
-  Droplets, 
-  Wrench, 
-  BarChart3, 
-  Cloud, 
-  Camera, 
-  Cpu, 
-  Play, 
-  Pause, 
-  Square,
-  Settings,
-  Activity,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  TrendingUp,
-  Shield,
-  Zap,
-  RefreshCw,
-  AlertCircle,
-  PhoneCall,
-  MessageSquare,
-  Users,
-  Network,
-  Workflow,
-  GitBranch,
-  Library,
-  Plus,
-  Download,
-  Route
-} from 'lucide-react';
+import { aiAgentAPI } from '@/services/aiAgentService';
 
 interface AIAgent {
   id: string;
@@ -137,14 +136,27 @@ export interface WorkflowStatus {
 
 const AIAgentManager: React.FC = () => {
   const { toast } = useToast();
+  const runVisionAnalysis = async () => {
+    try {
+      const result = await aiAgentAPI.analyzeComputerVision(
+        { imageUrl: 'https://picsum.photos/seed/drone/640/360' },
+        'fruit_counting'
+      );
+      console.log('Vision analysis result', result);
+      toast({ title: 'Vision Analysis', description: 'Completed successfully' });
+    } catch {
+      toast({ title: 'Vision Analysis Failed', description: 'Could not analyze sample image', variant: 'destructive' });
+    }
+  };
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false);
   
   // Enhanced collaboration state
   const [crewCollaboration, setCrewCollaboration] = useState<CrewCollaboration[]>([]);
-  const [agentMemory, setAgentMemory] = useState<AgentMemory[]>([]);
-  const [collaborationLogs, setCollaborationLogs] = useState<CollaborationLog[]>([]);
-  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus[]>([]);
+  const [agentMemory] = useState<AgentMemory[]>([]);
+  const [collaborationLogs] = useState<CollaborationLog[]>([]);
+  // Workflow status UI can be reintroduced when needed
   const [newCollaboration, setNewCollaboration] = useState<Partial<CrewCollaboration>>({
     title: '',
     agents: [],
@@ -155,7 +167,8 @@ const AIAgentManager: React.FC = () => {
 
   // Workflow template state
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [workflowConfig, setWorkflowConfig] = useState<any>({});
+  type WorkflowConfig = Record<string, unknown>;
+  const [workflowConfig, setWorkflowConfig] = useState<WorkflowConfig>({});
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [runningWorkflows, setRunningWorkflows] = useState<string[]>([]);
 
@@ -561,8 +574,8 @@ const AIAgentManager: React.FC = () => {
           }
           return agent;
         }));
-      } catch (error) {
-        console.error('Failed to update agent metrics:', error);
+      } catch {
+        // Silent fail; metrics will refresh on next interval
       }
     };
 
@@ -732,8 +745,9 @@ const AIAgentManager: React.FC = () => {
       };
       
       const response = await aiAgentAPI.initiateCrewCollaboration(collaborationData);
-      if ((response as any).success) {
-        setCrewCollaboration(prev => [...prev, (response as any).collaboration]);
+      const { success, collaboration } = response as unknown as { success: boolean; collaboration: CrewCollaboration };
+      if (success) {
+        setCrewCollaboration(prev => [...prev, collaboration]);
         setNewCollaboration({
           title: '',
           agents: [],
@@ -746,8 +760,8 @@ const AIAgentManager: React.FC = () => {
           description: "New crew collaboration has been initiated successfully.",
         });
       }
-    } catch (error) {
-      console.error('Error starting collaboration:', error);
+    } catch (_error) {
+      console.error('Error starting collaboration:', _error);
       toast({
         title: "Error",
         description: "Failed to start collaboration. Please try again.",
@@ -766,12 +780,11 @@ const AIAgentManager: React.FC = () => {
     console.log('Pausing collaboration:', collaborationId);
   };
 
-  const calculateLearningRate = (agentId: string) => {
-    const agent = agentMemory.find(a => a.agentId === agentId);
-    if (!agent) return 0;
-    // Simple learning rate calculation based on experience points
-    return Math.min(agent.experiencePoints / 100, 1);
-  };
+  // const calculateLearningRate = (agentId: string) => {
+  //   const agent = agentMemory.find(a => a.agentId === agentId);
+  //   if (!agent) return 0;
+  //   return Math.min(agent.experiencePoints / 100, 1);
+  // };
 
   // Workflow template functions
   const runWorkflowTemplate = async (templateName: string) => {
@@ -794,8 +807,8 @@ const AIAgentManager: React.FC = () => {
         });
       }, 5000);
 
-    } catch (error) {
-      console.error('Error running workflow:', error);
+    } catch {
+      // error already surfaced to UI
       toast({
         title: "Error",
         description: `Failed to run ${templateName} workflow. Please try again.`,
@@ -998,17 +1011,17 @@ const AIAgentManager: React.FC = () => {
                   });
 
                   const result = await aiAgentAPI.triggerAutomatedAnalysis();
-                  
+
                   toast({
                     title: "Global Test Completed",
-                    description: `Triggered ${Object.keys((result as any).analyses || {}).length} agent analyses`
+                    description: `Triggered ${Object.keys((result as unknown as { analyses: Record<string, unknown> }).analyses || {}).length} agent analyses`
                   });
-                } catch (error) {
+                } catch {
                   toast({
                     title: "Global Test Failed",
                     description: "Failed to trigger automated analysis"
                   });
-                  console.error('Global test failed:', error);
+                  // Optional: add logging service here
                 }
               }}
               className="bg-lime-600 hover:bg-lime-700"
@@ -1021,12 +1034,12 @@ const AIAgentManager: React.FC = () => {
               variant="outline"
               onClick={async () => {
                 try {
-                  const health = await aiAgentAPI.healthCheck();
+                  await aiAgentAPI.healthCheck();
                   toast({
                     title: "System Healthy",
                     description: "All AI agents are ready for operation"
                   });
-                } catch (error) {
+                } catch {
                   toast({
                     title: "System Check Failed",
                     description: "Some AI agents may not be responding"
@@ -1046,9 +1059,9 @@ const AIAgentManager: React.FC = () => {
                   const alerts = await aiAgentAPI.getActiveAlerts();
                   toast({
                     title: "Active Alerts",
-                    description: `Found ${(alerts as any[]).length} active alerts`
+                    description: `Found ${(alerts as unknown as unknown[]).length} active alerts`
                   });
-                } catch (error) {
+                } catch {
                   toast({
                     title: "Alert Check Failed",
                     description: "Could not retrieve alerts"
@@ -1059,6 +1072,15 @@ const AIAgentManager: React.FC = () => {
             >
               <AlertCircle className="w-4 h-4 mr-2" />
               Check Alerts
+            </Button>
+
+            <Button 
+              variant="outline"
+              onClick={runVisionAnalysis}
+              className="border-purple-500/30"
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              Run Vision Analysis
             </Button>
           </div>
             </TabsContent>
@@ -1218,7 +1240,7 @@ const AIAgentManager: React.FC = () => {
                         title: "All Agents Enabled",
                         description: "All AI agents are now active"
                       });
-                    } catch (error) {
+                    } catch {
                       toast({
                         title: "Operation Failed",
                         description: "Could not enable all agents"
@@ -1247,7 +1269,7 @@ const AIAgentManager: React.FC = () => {
                         title: "All Agents Disabled",
                         description: "All AI agents are now inactive"
                       });
-                    } catch (error) {
+                    } catch {
                       toast({
                         title: "Operation Failed",
                         description: "Could not disable all agents"
@@ -1338,7 +1360,7 @@ const AIAgentManager: React.FC = () => {
                             id="collab-priority"
                             className="w-full p-2 border border-border rounded-md bg-background text-foreground"
                             value={newCollaboration.priority || 'medium'}
-                            onChange={(e) => setNewCollaboration(prev => ({ ...prev, priority: e.target.value as any }))}
+                            onChange={(e) => setNewCollaboration(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' | 'critical' }))}
                           >
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
@@ -3165,7 +3187,7 @@ const AIAgentManager: React.FC = () => {
                               description: `Testing ${selectedAgentData.name}...`
                             });
 
-                            let result;
+                            // no-op result removed
                             switch (selectedAgentData.id) {
                               case 'irrigation-optimizer':
                                 result = await aiAgentAPI.optimizeIrrigation({
@@ -3190,33 +3212,32 @@ const AIAgentManager: React.FC = () => {
                                 });
                                 break;
                               case 'content-creation-agent':
-                                result = await aiAgentAPI.planContentCapture({
+                                await aiAgentAPI.planContentCapture({
                                   content_type: 'cinematic',
                                   target: 'apple_orchard',
                                   duration: 300
                                 });
                                 break;
                               case 'customer-service-agent':
-                                result = await aiAgentAPI.handleCustomerInquiry({
+                                await aiAgentAPI.handleCustomerInquiry({
                                   inquiry_type: 'phone_call',
                                   message: 'Test customer service response',
                                   priority: 'medium'
                                 });
                                 break;
                               default:
-                                result = await aiAgentAPI.triggerAutomatedAnalysis();
+                                await aiAgentAPI.triggerAutomatedAnalysis();
                             }
 
                             toast({
                               title: "Test Completed",
                               description: "Agent test executed successfully"
                             });
-                          } catch (error) {
+                          } catch {
                             toast({
                               title: "Test Failed",
                               description: "Agent test failed - check console for details"
                             });
-                            console.error('Agent test failed:', error);
                           }
                         }}
                         className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
@@ -3232,12 +3253,12 @@ const AIAgentManager: React.FC = () => {
                             variant="outline"
                             onClick={async () => {
                               try {
-                                const result = await aiAgentAPI.emergencyStopDrone('drone_01');
+                                await aiAgentAPI.emergencyStopDrone('drone_01');
                                 toast({
                                   title: "Emergency Stop",
                                   description: "Drone emergency stop executed"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Emergency Stop Failed",
                                   description: "Could not execute emergency stop"
@@ -3253,7 +3274,7 @@ const AIAgentManager: React.FC = () => {
                             variant="outline"
                             onClick={async () => {
                               try {
-                                const result = await aiAgentAPI.planDroneMission({
+                                await aiAgentAPI.planDroneMission({
                                   mission_type: 'content_capture',
                                   area: 'Field B',
                                   priority: 'medium'
@@ -3262,7 +3283,7 @@ const AIAgentManager: React.FC = () => {
                                   title: "Mission Planned",
                                   description: "New drone mission created successfully"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Mission Planning Failed",
                                   description: "Could not create mission plan"
@@ -3283,7 +3304,7 @@ const AIAgentManager: React.FC = () => {
                             variant="outline"
                             onClick={async () => {
                               try {
-                                const result = await aiAgentAPI.planContentCapture({
+                                await aiAgentAPI.planContentCapture({
                                   content_type: 'marketing',
                                   target: 'pear_orchard',
                                   duration: 600
@@ -3292,7 +3313,7 @@ const AIAgentManager: React.FC = () => {
                                   title: "Content Plan Created",
                                   description: "New marketing content plan ready"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Content Planning Failed",
                                   description: "Could not create content plan"
@@ -3308,12 +3329,12 @@ const AIAgentManager: React.FC = () => {
                             variant="outline"
                             onClick={async () => {
                               try {
-                                const result = await aiAgentAPI.assessContentQuality('content_001');
+                                await aiAgentAPI.assessContentQuality('content_001');
                                 toast({
                                   title: "Quality Assessment",
                                   description: "Content quality analysis completed"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Assessment Failed",
                                   description: "Could not assess content quality"
@@ -3335,7 +3356,7 @@ const AIAgentManager: React.FC = () => {
                                   title: "Trend Analysis",
                                   description: "Viral content trends identified for farming"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Trend Analysis Failed",
                                   description: "Could not analyze trends"
@@ -3357,7 +3378,7 @@ const AIAgentManager: React.FC = () => {
                                   title: "Hashtag Optimization",
                                   description: "Optimal hashtags generated for maximum reach"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Hashtag Optimization Failed",
                                   description: "Could not optimize hashtags"
@@ -3379,7 +3400,7 @@ const AIAgentManager: React.FC = () => {
                                   title: "Posting Time Optimization",
                                   description: "Best times to post for maximum engagement"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Timing Analysis Failed",
                                   description: "Could not optimize posting times"
@@ -3400,7 +3421,7 @@ const AIAgentManager: React.FC = () => {
                             variant="outline"
                             onClick={async () => {
                               try {
-                                const result = await aiAgentAPI.handleCustomerInquiry({
+                                await aiAgentAPI.handleCustomerInquiry({
                                   inquiry_type: 'email',
                                   message: 'Test email response generation',
                                   priority: 'high'
@@ -3409,7 +3430,7 @@ const AIAgentManager: React.FC = () => {
                                   title: "Email Response Test",
                                   description: "Customer service email response generated"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Email Test Failed",
                                   description: "Could not generate email response"
@@ -3425,7 +3446,7 @@ const AIAgentManager: React.FC = () => {
                             variant="outline"
                             onClick={async () => {
                               try {
-                                const result = await aiAgentAPI.simulatePhoneCall({
+                                await aiAgentAPI.simulatePhoneCall({
                                   call_type: 'incoming',
                                   duration: 120,
                                   customer_type: 'new'
@@ -3434,7 +3455,7 @@ const AIAgentManager: React.FC = () => {
                                   title: "Phone Call Simulation",
                                   description: "Virtual phone call handling tested successfully"
                                 });
-                              } catch (error) {
+                              } catch {
                                 toast({
                                   title: "Phone Test Failed",
                                   description: "Could not simulate phone call"

@@ -1,29 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
 import { 
-  Video, 
   Camera, 
+  Clock, 
   Download, 
   Eye, 
-  MapPin, 
-  Clock, 
   HardDrive,
-  Search,
-  Filter,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
   Maximize,
-  Calendar,
-  Tag
+  Pause,
+  Play,
+  Tag,
+  Video,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 interface DroneMedia {
   id: string;
@@ -32,12 +28,12 @@ interface DroneMedia {
   file_size: number;
   media_type: 'video' | 'photo';
   recorded_at: string;
-  location: any;
+  location: { lat: number; lng: number } | null;
   altitude: number;
   tags: string[];
   access_level: string;
   duration?: number;
-  camera_settings?: any;
+  camera_settings?: Record<string, unknown>;
 }
 
 interface StorageStats {
@@ -63,19 +59,14 @@ const DroneMediaLibrary: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const totalPages = Math.max(1, Math.ceil(filteredMedia.length / pageSize));
 
   const farmId = 'FARM_001'; // This would come from user context
 
-  useEffect(() => {
-    loadMedia();
-    loadStorageStats();
-  }, []);
-
-  useEffect(() => {
-    filterMedia();
-  }, [media, searchTerm, selectedTags, dateRange]);
-
-  const loadMedia = async () => {
+  // Define async callbacks before effects to avoid TDZ errors
+  const loadMedia = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/supabase/media?farmId=${farmId}`);
@@ -85,7 +76,7 @@ const DroneMediaLibrary: React.FC = () => {
       } else {
         throw new Error('Failed to load media');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error Loading Media",
         description: "Failed to load drone media from Supabase",
@@ -94,24 +85,32 @@ const DroneMediaLibrary: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [farmId, toast]);
 
-  const loadStorageStats = async () => {
+  const loadStorageStats = useCallback(async () => {
     try {
       const response = await fetch(`/api/supabase/storage-stats?farmId=${farmId}`);
       if (response.ok) {
         const data = await response.json();
         setStorageStats(data.stats);
       }
-    } catch (error) {
-      console.error('Failed to load storage stats:', error);
+    } catch {
+      toast({
+        title: 'Error Loading Storage Stats',
+        description: 'Failed to load storage usage from Supabase',
+        variant: 'destructive'
+      });
     }
-  };
+  }, [farmId]);
 
-  const filterMedia = () => {
+  useEffect(() => {
+    loadMedia();
+    loadStorageStats();
+  }, [loadMedia, loadStorageStats]);
+
+  useEffect(() => {
     let filtered = [...media];
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(item => 
         item.filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,14 +118,12 @@ const DroneMediaLibrary: React.FC = () => {
       );
     }
 
-    // Tag filter
     if (selectedTags.length > 0) {
       filtered = filtered.filter(item => 
         item.tags.some(tag => selectedTags.includes(tag))
       );
     }
 
-    // Date range filter
     if (dateRange.start) {
       filtered = filtered.filter(item => 
         new Date(item.recorded_at) >= new Date(dateRange.start)
@@ -139,7 +136,10 @@ const DroneMediaLibrary: React.FC = () => {
     }
 
     setFilteredMedia(filtered);
-  };
+    setPage(1);
+  }, [media, searchTerm, selectedTags, dateRange]);
+
+  // (filter logic handled in effect above)
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -203,6 +203,14 @@ const DroneMediaLibrary: React.FC = () => {
     }
   };
 
+  const handleVideoError = () => {
+    toast({
+      title: 'Video Error',
+      description: 'Failed to load the selected video',
+      variant: 'destructive'
+    });
+  };
+
   const downloadMedia = async (mediaItem: DroneMedia) => {
     try {
       const response = await fetch(`/api/supabase/download?mediaId=${mediaItem.id}&type=${mediaItem.media_type}`);
@@ -222,7 +230,7 @@ const DroneMediaLibrary: React.FC = () => {
           description: `${mediaItem.media_type} download initiated`,
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Download Failed",
         description: "Failed to download media file",
@@ -342,7 +350,9 @@ const DroneMediaLibrary: React.FC = () => {
 
           {/* Media Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredMedia.map((mediaItem) => (
+            {filteredMedia
+              .slice((page - 1) * pageSize, page * pageSize)
+              .map((mediaItem) => (
               <Card 
                 key={mediaItem.id} 
                 className={`glass-card border-lime-500/30 cursor-pointer transition-all hover:border-lime-500/50 ${
@@ -415,6 +425,42 @@ const DroneMediaLibrary: React.FC = () => {
             ))}
           </div>
 
+          {/* Pagination Controls */}
+          {filteredMedia.length > 0 && (
+            <div className="flex items-center justify-between mt-3">
+              <div className="text-sm text-gray-400">
+                Page {page} / {totalPages}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Prev
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Next
+                </Button>
+                <select
+                  className="text-sm bg-transparent border border-lime-500/30 rounded px-2 py-1"
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
+          )}
+
           {filteredMedia.length === 0 && !loading && (
             <Card className="glass-card border-lime-500/30">
               <CardContent className="text-center py-8">
@@ -447,6 +493,7 @@ const DroneMediaLibrary: React.FC = () => {
                       className="w-full rounded-lg bg-black"
                       onTimeUpdate={handleVideoTimeUpdate}
                       onLoadedMetadata={handleVideoLoadedMetadata}
+                      onError={handleVideoError}
                       controls={false}
                     >
                       <source src={selectedMedia.public_url} type="video/mp4" />

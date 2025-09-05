@@ -7,15 +7,15 @@ export interface AsyncState<T> {
   success: boolean;
 }
 
-export interface AsyncOperationOptions {
-  onSuccess?: (data: any) => void;
+export interface AsyncOperationOptions<T = unknown> {
+  onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
   showToast?: boolean;
 }
 
-export function useAsyncOperation<T = any>(
+export function useAsyncOperation<T = unknown>(
   initialData: T | null = null,
-  options: AsyncOperationOptions = {}
+  options: AsyncOperationOptions<T> = {}
 ) {
   const [state, setState] = useState<AsyncState<T>>({
     data: initialData,
@@ -26,7 +26,7 @@ export function useAsyncOperation<T = any>(
 
   const execute = useCallback(async (
     operation: () => Promise<T>,
-    customOptions: AsyncOperationOptions = {}
+    customOptions: AsyncOperationOptions<T> = {}
   ) => {
     const mergedOptions = { ...options, ...customOptions };
     

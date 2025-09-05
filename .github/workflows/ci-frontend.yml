@@ -1,0 +1,34 @@
+name: CI - Frontend
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Setup pnpm
+        run: npm i -g pnpm@9
+      - name: Install deps (prefer pnpm)
+        run: |
+          if [ -f pnpm-lock.yaml ]; then pnpm i --frozen-lockfile; else npm ci; fi
+      - name: Typecheck
+        run: |
+          if npm run | grep -q typecheck; then npm run typecheck || pnpm typecheck; else echo 'no typecheck script'; fi
+      - name: Lint
+        run: |
+          if npm run | grep -q lint; then npm run lint || pnpm lint; else echo 'no lint script'; fi
+      - name: Unit tests
+        run: |
+          if npm run | grep -q test; then npm run test -- --run || pnpm test --run; else echo 'no tests'; fi
+      - name: Build
+        run: |
+          if npm run | grep -q build; then npm run build || pnpm build; else echo 'no build script'; fi

@@ -1,0 +1,10 @@
+{"media_ids": ["m1"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m2","m3"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m4"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m5","m6","m7"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m8"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m9","m10"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m11","m12"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m13"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m14","m15"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}
+{"media_ids": ["m16"], "expected": {"count": "number", "heatmap_ref": ["string", null]}}

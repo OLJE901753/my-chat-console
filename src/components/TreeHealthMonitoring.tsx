@@ -1,9 +1,3 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   TreePine, 
   AlertTriangle, 
@@ -12,10 +6,15 @@ import {
   Activity,
   Droplets,
   Bug,
-  Leaf,
-  TrendingUp,
-  TrendingDown
+  TrendingUp
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface TreeData {
   id: string;
@@ -91,14 +90,7 @@ const TreeHealthMonitoring = () => {
     inspectionsToday: 127
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy': return 'text-green-500';
-      case 'warning': return 'text-yellow-500';
-      case 'critical': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
-  };
+  // status color computed inline via icons
 
   const getStatusIcon = (status: string) => {
     switch (status) {

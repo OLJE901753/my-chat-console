@@ -51,7 +51,7 @@ export const farmZoneSchema = z.object({
     .optional(),
   coordinates: z.string()
     .min(1, 'Coordinates are required')
-    .regex(/^POLYGON\(\([0-9\.,\s-]+\)\)$/, 'Invalid polygon format'),
+    .regex(/^POLYGON\(\([0-9.,\s-]+\)\)$/, 'Invalid polygon format'),
   area_hectares: z.number()
     .positive('Area must be positive')
     .max(10000, 'Area too large'),
@@ -81,7 +81,7 @@ export const sensorSchema = z.object({
   type: sensorTypeSchema,
   location: z.string()
     .min(1, 'Location is required')
-    .regex(/^POINT\([0-9\.,\s-]+\)$/, 'Invalid point format'),
+    .regex(/^POINT\([0-9.,\s-]+\)$/, 'Invalid point format'),
   zone_id: z.string().uuid('Invalid zone ID'),
   status: z.enum(['active', 'inactive', 'maintenance', 'error']).default('active'),
   battery_level: z.number()
@@ -102,7 +102,7 @@ export const droneSchema = z.object({
     .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Model contains invalid characters'),
   status: z.enum(['idle', 'flying', 'charging', 'maintenance', 'error']).default('idle'),
   current_location: z.string()
-    .regex(/^POINT\([0-9\.,\s-]+\)$/, 'Invalid point format')
+    .regex(/^POINT\([0-9.,\s-]+\)$/, 'Invalid point format')
     .optional(),
   battery_level: z.number()
     .min(0, 'Battery level cannot be negative')
@@ -115,7 +115,7 @@ export const missionSchema = z.object({
   mission_type: z.enum(['surveillance', 'mapping', 'spraying', 'monitoring']),
   status: z.enum(['planned', 'active', 'completed', 'cancelled', 'error']).default('planned'),
   flight_path: z.string()
-    .regex(/^LINESTRING\([0-9\.,\s-]+\)$/, 'Invalid linestring format')
+    .regex(/^LINESTRING\([0-9.,\s-]+\)$/, 'Invalid linestring format')
     .optional(),
   start_time: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/, 'Invalid datetime format')
@@ -133,7 +133,7 @@ export const weatherStationSchema = z.object({
     .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Name contains invalid characters'),
   location: z.string()
     .min(1, 'Location is required')
-    .regex(/^POINT\([0-9\.,\s-]+\)$/, 'Invalid point format'),
+    .regex(/^POINT\([0-9.,\s-]+\)$/, 'Invalid point format'),
   elevation: z.number()
     .min(-1000, 'Elevation too low')
     .max(10000, 'Elevation too high'),
@@ -151,7 +151,7 @@ export const gpsFenceSchema = z.object({
     .optional(),
   boundary: z.string()
     .min(1, 'Boundary is required')
-    .regex(/^POLYGON\(\([0-9\.,\s-]+\)\)$/, 'Invalid polygon format'),
+    .regex(/^POLYGON\(\([0-9.,\s-]+\)\)$/, 'Invalid polygon format'),
   active: z.boolean().default(true),
   restrictions: z.array(z.enum(['no_drones', 'no_vehicles', 'restricted_access'])).default([])
 })

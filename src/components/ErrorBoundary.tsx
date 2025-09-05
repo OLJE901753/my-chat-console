@@ -1,7 +1,8 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Props {
   children: ReactNode;
@@ -176,7 +177,11 @@ class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return (
+      <React.Suspense fallback={<div>Loading...</div>}>
+        {this.props.children}
+      </React.Suspense>
+    );
   }
 }
 

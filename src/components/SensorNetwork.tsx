@@ -1,8 +1,3 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { 
   Droplets, 
   Thermometer, 
@@ -14,6 +9,12 @@ import {
   TreePine,
   Bug
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 
 interface SensorData {
   id: string;
@@ -24,11 +25,11 @@ interface SensorData {
   unit: string;
   location: string;
   lastUpdate: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const SensorNetwork = () => {
-  const [sensors, setSensors] = useState<SensorData[]>([
+  const [sensors] = useState<SensorData[]>([
     {
       id: 'soil-01',
       name: 'Soil Moisture Zone A',
@@ -86,21 +87,14 @@ const SensorNetwork = () => {
     }
   ]);
 
-  const [networkStats, setNetworkStats] = useState({
+  const [networkStats] = useState({
     totalSensors: 24,
     onlineSensors: 22,
     dataPoints: 15847,
     coverage: 94
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return 'text-green-500';
-      case 'offline': return 'text-red-500';
-      case 'warning': return 'text-yellow-500';
-      default: return 'text-gray-500';
-    }
-  };
+  // status color computed directly where needed
 
   const getStatusIcon = (status: string) => {
     switch (status) {

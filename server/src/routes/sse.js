@@ -4,20 +4,33 @@ const router = express.Router();
 // Store connected SSE clients
 const sseClients = new Set();
 
+// Handle preflight just in case a proxy/browser sends it
+router.options('/events', (req, res) => {
+  const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:8080';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Cache-Control, Last-Event-ID, Content-Type');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  return res.status(204).end();
+});
+
 // SSE endpoint
 router.get('/events', (req, res) => {
-  // Set SSE headers
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Cache-Control'
-  });
+  // Set SSE headers (align with CORS origin)
+  const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:8080';
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Headers', 'Cache-Control, Last-Event-ID, Content-Type');
+  // Only set credentials header if you actually use cookies; harmless if present with explicit origin
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.flushHeaders?.();
 
   // Add client to the set
   const clientId = Date.now() + Math.random();
-  sseClients.add({ id: clientId, response: res });
+  const client = { id: clientId, response: res };
+  sseClients.add(client);
   
   console.log(`📡 SSE client connected: ${clientId}`);
   console.log(`📊 Total SSE clients: ${sseClients.size}`);
@@ -31,7 +44,7 @@ router.get('/events', (req, res) => {
 
   // Handle client disconnect
   req.on('close', () => {
-    sseClients.delete({ id: clientId, response: res });
+    sseClients.delete(client);
     console.log(`📡 SSE client disconnected: ${clientId}`);
     console.log(`📊 Total SSE clients: ${sseClients.size}`);
   });

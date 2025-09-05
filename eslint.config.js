@@ -3,6 +3,8 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
+import eslintPluginImport from "eslint-plugin-import";
+import eslintPluginSecurity from "eslint-plugin-security";
 
 export default tseslint.config(
   { ignores: ["dist"] },
@@ -16,6 +18,8 @@ export default tseslint.config(
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
+      import: eslintPluginImport,
+      security: eslintPluginSecurity,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -23,7 +27,16 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "import/order": [
+        "warn",
+        {
+          groups: [["builtin", "external"], ["internal"], ["parent", "sibling", "index"]],
+          alphabetize: { order: "asc", caseInsensitive: true },
+          "newlines-between": "always",
+        },
+      ],
+      "security/detect-object-injection": "off",
     },
   }
 );

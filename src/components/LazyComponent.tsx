@@ -1,12 +1,11 @@
 import React, { Suspense, ComponentType } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import LoadingState from './LoadingState';
-import ErrorDisplay from './ErrorDisplay';
+
 import ErrorBoundary from './ErrorBoundary';
+import ErrorDisplay from './ErrorDisplay';
+import LoadingState from './LoadingState';
 
 interface LazyComponentProps {
-  component: () => Promise<{ default: ComponentType<any> }>;
+  component: () => Promise<{ default: ComponentType<unknown> }>;
   fallback?: React.ReactNode;
   errorFallback?: React.ReactNode;
   loadingMessage?: string;

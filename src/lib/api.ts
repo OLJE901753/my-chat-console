@@ -1,4 +1,3 @@
-import { supabase } from './supabase'
 import { authService } from './auth'
 import { securityUtils } from './security'
 
@@ -29,7 +28,7 @@ const addAuthHeaders = (headers: Headers): void => {
 }
 
 // Response interceptor for handling errors
-const handleResponse = async (response: Response): Promise<any> => {
+const handleResponse = async <T>(response: Response): Promise<T | string> => {
   if (!response.ok) {
     let errorMessage = 'An error occurred'
     
@@ -43,7 +42,7 @@ const handleResponse = async (response: Response): Promise<any> => {
     
     // Handle specific HTTP status codes
     switch (response.status) {
-      case 401:
+      case 401: {
         // Unauthorized - try to refresh token
         const newToken = await authService.refreshAccessToken()
         if (!newToken) {
@@ -52,6 +51,7 @@ const handleResponse = async (response: Response): Promise<any> => {
           window.location.href = '/'
         }
         throw new Error('Authentication required. Please try again.')
+      }
         
       case 403:
         throw new Error('Access denied. You do not have permission to perform this action.')
@@ -73,7 +73,7 @@ const handleResponse = async (response: Response): Promise<any> => {
   // Check if response has content
   const contentType = response.headers.get('content-type')
   if (contentType && contentType.includes('application/json')) {
-    return response.json()
+    return (await response.json()) as T
   }
   
   return response.text()
@@ -109,10 +109,10 @@ class SecureAPIClient {
   }
   
   // Generic request method
-  private async request(
+  private async request<T>(
     endpoint: string,
     options: RequestInit = {}
-  ): Promise<any> {
+  ): Promise<T | string> {
     const url = `${this.baseURL}${endpoint}`
     
     // Set default options
@@ -138,12 +138,13 @@ class SecureAPIClient {
       )
       
       clearTimeout(timeoutId)
-      return handleResponse(response)
+      return handleResponse<T>(response)
       
-    } catch (error) {
+    } catch (error: unknown) {
       clearTimeout(timeoutId)
       
-      if (error.name === 'AbortError') {
+      const name = (error as { name?: unknown }).name
+      if (typeof name === 'string' && name === 'AbortError') {
         throw new Error('Request timeout')
       }
       
@@ -152,47 +153,47 @@ class SecureAPIClient {
   }
   
   // GET request
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+  async get<T>(endpoint: string, params?: Record<string, unknown>): Promise<T> {
     const queryString = params ? new URLSearchParams(params).toString() : ''
     const url = queryString ? `${endpoint}?${queryString}` : endpoint
     
-    return this.request(url, { method: 'GET' })
+    return this.request<T>(url, { method: 'GET' }) as Promise<T>
   }
   
   // POST request
-  async post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request(endpoint, {
+  async post<T, D = unknown>(endpoint: string, data?: D): Promise<T> {
+    return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined
-    })
+    }) as Promise<T>
   }
   
   // PUT request
-  async put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request(endpoint, {
+  async put<T, D = unknown>(endpoint: string, data?: D): Promise<T> {
+    return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined
-    })
+    }) as Promise<T>
   }
   
   // PATCH request
-  async patch<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request(endpoint, {
+  async patch<T, D = unknown>(endpoint: string, data?: D): Promise<T> {
+    return this.request<T>(endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined
-    })
+    }) as Promise<T>
   }
   
   // DELETE request
   async delete<T>(endpoint: string): Promise<T> {
-    return this.request(endpoint, { method: 'DELETE' })
+    return this.request<T>(endpoint, { method: 'DELETE' }) as Promise<T>
   }
   
   // File upload with security validation
   async uploadFile<T>(
     endpoint: string,
     file: File,
-    additionalData?: Record<string, any>
+    additionalData?: Record<string, unknown>
   ): Promise<T> {
     // Validate file security
     const validation = securityUtils.validateFileUpload(file)
@@ -215,27 +216,27 @@ class SecureAPIClient {
     addAuthHeaders(headers)
     headers.delete('Content-Type') // Let browser set this for FormData
     
-    return this.request(endpoint, {
+    return this.request<T>(endpoint, {
       method: 'POST',
       headers,
       body: formData
-    })
+    }) as Promise<T>
   }
   
   // Batch request for multiple operations
-  async batch<T>(requests: Array<{ method: string; endpoint: string; data?: any }>): Promise<T[]> {
+  async batch<T>(requests: Array<{ method: string; endpoint: string; data?: unknown }>): Promise<T[]> {
     const promises = requests.map(({ method, endpoint, data }) => {
       switch (method.toUpperCase()) {
         case 'GET':
-          return this.get(endpoint)
+          return this.get<T>(endpoint)
         case 'POST':
-          return this.post(endpoint, data)
+          return this.post<T>(endpoint, data)
         case 'PUT':
-          return this.put(endpoint, data)
+          return this.put<T>(endpoint, data)
         case 'PATCH':
-          return this.patch(endpoint, data)
+          return this.patch<T>(endpoint, data)
         case 'DELETE':
-          return this.delete(endpoint)
+          return this.delete<T>(endpoint)
         default:
           throw new Error(`Unsupported method: ${method}`)
       }
@@ -260,14 +261,14 @@ export const apiClient = new SecureAPIClient()
 
 // Export utility functions
 export const createAPIEndpoint = (basePath: string) => ({
-  list: (params?: Record<string, any>) => apiClient.get(`${basePath}`, params),
-  get: (id: string) => apiClient.get(`${basePath}/${id}`),
-  create: (data: any) => apiClient.post(`${basePath}`, data),
-  update: (id: string, data: any) => apiClient.put(`${basePath}/${id}`, data),
-  patch: (id: string, data: any) => apiClient.patch(`${basePath}/${id}`, data),
-  delete: (id: string) => apiClient.delete(`${basePath}/${id}`),
-  upload: (file: File, additionalData?: Record<string, any>) => 
-    apiClient.uploadFile(`${basePath}/upload`, file, additionalData)
+  list: <T>(params?: Record<string, unknown>) => apiClient.get<T>(`${basePath}`, params),
+  get: <T>(id: string) => apiClient.get<T>(`${basePath}/${id}`),
+  create: <T, D = unknown>(data: D) => apiClient.post<T, D>(`${basePath}`, data),
+  update: <T, D = unknown>(id: string, data: D) => apiClient.put<T, D>(`${basePath}/${id}`, data),
+  patch: <T, D = unknown>(id: string, data: D) => apiClient.patch<T, D>(`${basePath}/${id}`, data),
+  delete: <T>(id: string) => apiClient.delete<T>(`${basePath}/${id}`),
+  upload: <T>(file: File, additionalData?: Record<string, unknown>) => 
+    apiClient.uploadFile<T>(`${basePath}/upload`, file, additionalData)
 })
 
 // Pre-configured endpoints for common resources
@@ -279,13 +280,13 @@ export const irrigationAPI = createAPIEndpoint('/irrigation')
 export const usersAPI = createAPIEndpoint('/users')
 
 // Export types
-export interface APIResponse<T = any> {
+export interface APIResponse<T = unknown> {
   data: T
   message?: string
   timestamp: string
 }
 
-export interface PaginatedResponse<T = any> extends APIResponse<T[]> {
+export interface PaginatedResponse<T = unknown> extends APIResponse<T[]> {
   pagination: {
     page: number
     limit: number
@@ -297,6 +298,6 @@ export interface PaginatedResponse<T = any> extends APIResponse<T[]> {
 export interface APIError {
   message: string
   code: string
-  details?: any
+  details?: unknown
   timestamp: string
 }

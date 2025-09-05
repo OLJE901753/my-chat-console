@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+
 import { useRealtime } from '@/components/RealtimeProvider';
 
 // Generic real-time data hook
@@ -6,7 +7,7 @@ export function useRealtimeData<T>(
   messageType: string,
   initialData: T | null = null,
   options: {
-    transform?: (data: any) => T;
+    transform?: (data: unknown) => T;
     onUpdate?: (data: T) => void;
     onError?: (error: Error) => void;
   } = {}
@@ -18,24 +19,33 @@ export function useRealtimeData<T>(
 
   const { connected, subscribe } = useRealtime();
 
+  // Keep callbacks in refs to avoid resubscribing on every render when options identity changes
+  const transformRef = useRef(options.transform);
+  const onUpdateRef = useRef(options.onUpdate);
+  const onErrorRef = useRef(options.onError);
+
+  useEffect(() => { transformRef.current = options.transform; }, [options.transform]);
+  useEffect(() => { onUpdateRef.current = options.onUpdate; }, [options.onUpdate]);
+  useEffect(() => { onErrorRef.current = options.onError; }, [options.onError]);
+
   useEffect(() => {
-    const unsubscribe = subscribe(messageType, (rawData: any) => {
+    const unsubscribe = subscribe(messageType, (rawData: unknown) => {
       try {
-        const transformedData = options.transform ? options.transform(rawData) : rawData;
+        const transformedData = transformRef.current ? transformRef.current(rawData) : (rawData as T);
         setData(transformedData);
         setLastUpdate(new Date());
         setIsLive(true);
         setError(null);
-        options.onUpdate?.(transformedData);
+        onUpdateRef.current?.(transformedData);
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Data transformation failed');
         setError(error.message);
-        options.onError?.(error);
+        onErrorRef.current?.(error);
       }
     });
 
     return unsubscribe;
-  }, [subscribe, messageType, options.transform, options.onUpdate, options.onError]);
+  }, [subscribe, messageType]);
 
   // Mark as not live if connection is lost
   useEffect(() => {
@@ -56,7 +66,7 @@ export function useRealtimeData<T>(
 // Drone telemetry real-time data
 export function useDroneTelemetry() {
   return useRealtimeData('drone_telemetry', null, {
-    transform: (data) => ({
+    transform: (data: Record<string, unknown>) => ({
       battery: data.battery || 0,
       altitude: data.altitude || 0,
       speed: data.speed || 0,
@@ -72,7 +82,7 @@ export function useDroneTelemetry() {
 // Sensor readings real-time data
 export function useSensorReadings() {
   return useRealtimeData('sensor_readings', null, {
-    transform: (data) => ({
+    transform: (data: Record<string, unknown>) => ({
       npk: data.npk || { nitrogen: 0, phosphorus: 0, potassium: 0 },
       ph: data.ph || 7.0,
       moisture: data.moisture || 0,
@@ -88,7 +98,7 @@ export function useSensorReadings() {
 // Weather data real-time updates
 export function useWeatherData() {
   return useRealtimeData('weather_data', null, {
-    transform: (data) => ({
+    transform: (data: Record<string, unknown>) => ({
       temperature: data.temperature || 0,
       humidity: data.humidity || 0,
       pressure: data.pressure || 0,
@@ -105,7 +115,7 @@ export function useWeatherData() {
 // AI agent status real-time updates
 export function useAgentStatus() {
   return useRealtimeData('agent_status', null, {
-    transform: (data) => ({
+    transform: (data: Record<string, unknown>) => ({
       agentId: data.agentId || '',
       status: data.status || 'inactive',
       lastActivity: data.lastActivity || null,
@@ -120,7 +130,7 @@ export function useAgentStatus() {
 // Mission progress real-time updates
 export function useMissionProgress() {
   return useRealtimeData('mission_progress', null, {
-    transform: (data) => ({
+    transform: (data: Record<string, unknown>) => ({
       missionId: data.missionId || '',
       status: data.status || 'pending',
       progress: data.progress || 0,
@@ -136,7 +146,7 @@ export function useMissionProgress() {
 // System alerts real-time updates
 export function useSystemAlerts() {
   return useRealtimeData('system_alerts', [], {
-    transform: (data) => Array.isArray(data) ? data : [],
+    transform: (data: unknown) => Array.isArray(data) ? data : [],
   });
 }
 
@@ -144,15 +154,15 @@ export function useSystemAlerts() {
 export function useRealtimeCommands() {
   const { send } = useRealtime();
 
-  const sendCommand = useCallback((command: string, params: any = {}) => {
+  const sendCommand = useCallback((command: string, params: Record<string, unknown> = {}) => {
     send('command', { command, params, timestamp: Date.now() });
   }, [send]);
 
-  const sendDroneCommand = useCallback((command: string, params: any = {}) => {
+  const sendDroneCommand = useCallback((command: string, params: Record<string, unknown> = {}) => {
     send('drone_command', { command, params, timestamp: Date.now() });
   }, [send]);
 
-  const sendAgentCommand = useCallback((agentId: string, command: string, params: any = {}) => {
+  const sendAgentCommand = useCallback((agentId: string, command: string, params: Record<string, unknown> = {}) => {
     send('agent_command', { agentId, command, params, timestamp: Date.now() });
   }, [send]);
 
@@ -165,12 +175,12 @@ export function useRealtimeCommands() {
 
 // Hook for real-time notifications
 export function useRealtimeNotifications() {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Array<Record<string, unknown>>>([]);
   const { subscribe } = useRealtime();
 
   useEffect(() => {
-    const unsubscribe = subscribe('notification', (notification: any) => {
-      setNotifications(prev => [notification, ...prev.slice(0, 9)]); // Keep last 10
+    const unsubscribe = subscribe('notification', (notification: unknown) => {
+      setNotifications(prev => [notification as Record<string, unknown>, ...prev.slice(0, 9)]); // Keep last 10
     });
 
     return unsubscribe;

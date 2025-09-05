@@ -1,9 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
-import { SecureForm, SecureInput } from '@/components/SecureForm';
-import { authService } from '@/lib/auth';
-import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { SecureForm, SecureInput } from '@/components/SecureForm';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { authService } from '@/lib/auth';
 
 const Index = () => {
   const navigate = useNavigate();

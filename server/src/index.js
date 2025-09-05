@@ -35,18 +35,22 @@ app.use(helmet({
   },
 }));
 
+// CORS (must be before rate limiting so error responses include CORS)
+const corsOrigin = process.env.FRONTEND_URL || "http://localhost:8080";
+const corsOptions = { origin: corsOrigin, credentials: true };
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 // Performance monitoring
 app.use(performanceMonitor);
 
-// Rate limiting with performance tracking
-const limiter = createRateLimiter(15 * 60 * 1000, 100); // 15 minutes, 100 requests
+// Rate limiting with performance tracking (relax in development)
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_REQUESTS = process.env.NODE_ENV === 'production' ? 100 : 10000;
+const limiter = createRateLimiter(WINDOW_MS, MAX_REQUESTS);
 app.use('/api/', limiter);
 
-// CORS
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:8080",
-  credentials: true
-}));
+// (CORS already configured above)
 
 // Request timeout
 app.use(timeoutHandler(30000)); // 30 seconds

@@ -1,0 +1,10 @@
+{"media_ids": ["m1"], "context": {}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m2","m3"], "context": {}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m4"], "context": {"season":"fall"}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m5"], "context": {"focus":"irrigation"}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m6"], "context": {"audience":"buyers"}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m7","m8"], "context": {}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m9"], "context": {"language":"en"}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m10"], "context": {"platform":"instagram"}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m11"], "context": {}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}
+{"media_ids": ["m12"], "context": {}, "expected": {"clips": "array", "captions": {"youtube": "array", "instagram": "array", "tiktok": "array"}}}

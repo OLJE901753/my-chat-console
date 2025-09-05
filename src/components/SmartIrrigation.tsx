@@ -1,14 +1,7 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { 
   Droplets, 
   Timer, 
   Zap,
-  MapPin,
   Settings,
   Play,
   Pause,
@@ -17,6 +10,13 @@ import {
   Thermometer,
   Cloud
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 
 interface IrrigationZone {
   id: string;

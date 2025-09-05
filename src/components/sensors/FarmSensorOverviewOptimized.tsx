@@ -1,11 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { 
   Thermometer, 
   Droplets, 
-  Sun, 
   Wind, 
   Zap, 
   Leaf,
@@ -13,6 +8,11 @@ import {
   TrendingDown,
   Minus
 } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Progress } from '@/components/ui/progress';
 
 interface TelemetryPoint {
   timestamp: string;
@@ -104,7 +104,7 @@ const useTelemetryFeed = () => {
       const resp = await fetch('http://localhost:3001/api/telemetry/history?limit=60');
       if (resp.ok && isMountedRef.current) {
         const result = await resp.json();
-        const mapped: TelemetryPoint[] = (result.data || []).map((row: any, index: number) => ({
+        const mapped: TelemetryPoint[] = (result.data || []).map((row: Record<string, unknown>, index: number) => ({
           timestamp: row.timestamp,
           altitude: row.altitude ?? 0,
           speed: row.speed ?? 0,
@@ -123,7 +123,7 @@ const useTelemetryFeed = () => {
           setData(mapped);
         }
       }
-    } catch (err) {
+    } catch {
       // ignore; UI will show empty state
     }
   }, []);
@@ -162,7 +162,7 @@ const useTelemetryFeed = () => {
             return next.slice(-120); // keep last 120 points
           });
         }
-      } catch (_) {
+      } catch {
         // ignore bad frames
       }
     };

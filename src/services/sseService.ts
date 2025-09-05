@@ -1,6 +1,6 @@
-export interface SSEMessage {
+export interface SSEMessage<T = unknown> {
   type: string;
-  data: any;
+  data: T;
   timestamp: number;
 }
 
@@ -16,7 +16,7 @@ export interface ConnectionState {
   error?: string;
 }
 
-type EventListener = (...args: any[]) => void;
+type EventListener<T = unknown> = (payload: T) => void;
 
 export class SSEService {
   private listeners: Map<string, Set<EventListener>> = new Map();
@@ -38,7 +38,7 @@ export class SSEService {
     };
   }
 
-  private log(message: string, ...args: any[]) {
+  private log(message: string, ...args: unknown[]) {
     if (this.config.debug) {
       console.log(`[SSE] ${message}`, ...args);
     }
@@ -119,7 +119,7 @@ export class SSEService {
     });
   }
 
-  private handleMessage(message: SSEMessage) {
+  private handleMessage<T = unknown>(message: SSEMessage<T>) {
     // Handle special message types
     switch (message.type) {
       case 'connected':
@@ -128,36 +128,37 @@ export class SSEService {
       case 'heartbeat':
         this.log('💓 SSE heartbeat received');
         break;
-      default:
+      default: {
         // Emit to specific listeners
         const listeners = this.listeners.get(message.type);
         if (listeners) {
           listeners.forEach(callback => {
             try {
-              callback(message.data);
+              (callback as EventListener<T>)(message.data);
             } catch (error) {
               this.log('❌ Error in message listener:', error);
             }
           });
         }
         break;
+      }
     }
   }
 
   // Subscribe to specific message types
-  subscribe(type: string, callback: (data: any) => void): () => void {
+  subscribe<T = unknown>(type: string, callback: (data: T) => void): () => void {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
     
-    this.listeners.get(type)!.add(callback);
+    (this.listeners.get(type) as Set<EventListener<T>>).add(callback as EventListener<T>);
     this.log(`📡 Subscribed to: ${type}`);
     
     // Return unsubscribe function
     return () => {
       const listeners = this.listeners.get(type);
       if (listeners) {
-        listeners.delete(callback);
+        (listeners as Set<EventListener<T>>).delete(callback as EventListener<T>);
         if (listeners.size === 0) {
           this.listeners.delete(type);
         }

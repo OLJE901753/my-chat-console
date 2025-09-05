@@ -1,17 +1,16 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   AlertTriangle, 
   RefreshCw, 
-  Wifi, 
   WifiOff, 
   Server, 
   Database,
-  Zap,
-  Info
+  Zap
 } from 'lucide-react';
+import React from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export interface ErrorDisplayProps {
   error: string | Error | null;

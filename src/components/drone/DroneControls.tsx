@@ -1,9 +1,3 @@
-import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { 
   Play, 
   Square, 
@@ -18,10 +12,16 @@ import {
   Video,
   Square as StopIcon
 } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 
 interface DroneControlsProps {
   isConnected: boolean;
-  onCommand: (command: string, params?: any) => void;
+  onCommand: (command: string, params?: Record<string, unknown>) => void;
   isLoading: boolean;
 }
 

@@ -1,12 +1,14 @@
+import { Plane, Settings, MapPin, Camera } from 'lucide-react';
 import React, { useEffect } from 'react';
+
+import DroneControls from './DroneControls';
+import DroneStatusPanel from './DroneStatusPanel';
+import MissionManager from './MissionManager';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDroneStatus, useDroneConnection, useMissionMutations, useDroneCommand } from '@/hooks/useDroneQueries';
 import { useDroneStore } from '@/stores/droneStore';
-import { useDroneStatus, useDroneConnection, useMissionMutations } from '@/hooks/useDroneQueries';
-import DroneStatusPanel from './DroneStatusPanel';
-import DroneControls from './DroneControls';
-import MissionManager from './MissionManager';
-import { Drone, Settings, MapPin, Camera } from 'lucide-react';
 
 const DroneControlRefactored: React.FC = () => {
   // Zustand store state
@@ -16,12 +18,13 @@ const DroneControlRefactored: React.FC = () => {
     activeMission, 
     isLoading, 
     error,
-    setConnected,
     setActiveMission
   } = useDroneStore();
 
   // React Query hooks
-  const { data: droneStatus, isLoading: statusLoading } = useDroneStatus();
+  // Hooks kept to preserve data flow; values currently unused in UI
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: droneStatus } = useDroneStatus();
   const { connect, disconnect, isConnecting, isDisconnecting } = useDroneConnection();
   const {
     startMission,
@@ -33,6 +36,9 @@ const DroneControlRefactored: React.FC = () => {
     isStopping,
     isDeleting
   } = useMissionMutations();
+
+  // Drone command mutation (send actual commands instead of console.log)
+  const { mutate: executeDroneCommand } = useDroneCommand();
 
   // Handle connection
   const handleConnect = () => {
@@ -61,9 +67,8 @@ const DroneControlRefactored: React.FC = () => {
   };
 
   // Handle drone commands
-  const handleDroneCommand = (command: string, params?: any) => {
-    // This would be implemented with the drone command mutation
-    console.log('Drone command:', command, params);
+  const handleDroneCommand = (command: string, params?: Record<string, unknown>) => {
+    executeDroneCommand({ command, params });
   };
 
   // Update active mission when missions change
@@ -78,7 +83,7 @@ const DroneControlRefactored: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Drone className="h-6 w-6" />
+            <Plane className="h-6 w-6" />
             Drone Control System
           </CardTitle>
         </CardHeader>
@@ -117,7 +122,7 @@ const DroneControlRefactored: React.FC = () => {
       <Tabs defaultValue="status" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="status" className="flex items-center gap-2">
-            <Drone className="h-4 w-4" />
+            <Plane className="h-4 w-4" />
             Status
           </TabsTrigger>
           <TabsTrigger value="controls" className="flex items-center gap-2">
