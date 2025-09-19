@@ -1,0 +1,25 @@
+# AI and Machine Learning Requirements
+# For Norwegian Farm AI with CrewAI
+
+# Core AI framework
+crewai>=0.175.0
+crewai-tools>=0.1.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Norwegian farming specific
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+
+# Utilities
+python-dateutil>=2.8.0
+pytz>=2023.3
+requests>=2.31.0

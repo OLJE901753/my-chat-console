@@ -1,0 +1,96 @@
+[33mcommit e075f8a7cfcf0dc805fb899a6c52469c2f333667[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: oj <oj@example.com>
+Date:   Wed Sep 3 18:20:57 2025 +0200
+
+    Major system improvements: SSE migration, component decomposition, state management, and auto-fixer scripts
+    
+    - Migrated from WebSocket to Server-Sent Events (SSE) for real-time communication
+    - Implemented component decomposition for better maintainability
+    - Added Zustand and React Query for advanced state management
+    - Created comprehensive auto-fixer system with batch scripts
+    - Enhanced backend with middleware for validation, error handling, and performance monitoring
+    - Added Python AI integration with CrewAI system
+    - Improved drone service with better error handling
+    - Created multiple startup scripts to avoid PowerShell issues
+    - Added comprehensive testing and diagnostic tools
+    - Fixed all port conflicts and server startup issues
+
+.env
+IMPROVEMENTS_SUMMARY.md
+auto-fix-system.bat
+farm_ai_crew/.gitignore
+farm_ai_crew/README.md
+farm_ai_crew/demo_structure.py
+farm_ai_crew/knowledge/user_preference.txt
+farm_ai_crew/pyproject.toml
+farm_ai_crew/requirements.txt
+farm_ai_crew/src/farm_ai_crew/__init__.py
+farm_ai_crew/src/farm_ai_crew/config/agents.yaml
+farm_ai_crew/src/farm_ai_crew/config/tasks.yaml
+farm_ai_crew/src/farm_ai_crew/crew.py
+farm_ai_crew/src/farm_ai_crew/main.py
+farm_ai_crew/src/farm_ai_crew/tools/__init__.py
+farm_ai_crew/src/farm_ai_crew/tools/custom_tool.py
+farm_ai_crew/test_crewai.py
+package-lock.json
+package.json
+server/.env
+server/package-lock.json
+server/package.json
+server/src/database/ai_agents.db
+server/src/database/drone_control.db
+server/src/index.js
+server/src/middleware/errorHandler.js
+server/src/middleware/performance.js
+server/src/middleware/validation.js
+server/src/routes/aiAgents.js
+server/src/routes/pythonAI.js
+server/src/routes/sse.js
+server/src/services/aiAgentService.js
+server/src/services/droneServiceImproved.js
+server/src/services/sseService.js
+src/App.tsx
+src/components/AIAgentManager.tsx
+src/components/AIMissionPlanner.tsx
+src/components/DroneControl.tsx
+src/components/ErrorBoundary.tsx
+src/components/ErrorDisplay.tsx
+src/components/ErrorHandlingDemo.tsx
+src/components/LazyComponent.tsx
+src/components/LoadingState.tsx
+src/components/PythonAIControl.tsx
+src/components/RealtimeDashboard.tsx
+src/components/RealtimeProvider.tsx
+src/components/drone/DroneControlRefactored.tsx
+src/components/drone/DroneControls.tsx
+src/components/drone/DroneStatusPanel.tsx
+src/components/drone/MissionManager.tsx
+src/components/sensors/FarmSensorOverviewOptimized.tsx
+src/hooks/useAsyncOperation.ts
+src/hooks/useDroneQueries.ts
+src/hooks/useRealtimeData.ts
+src/pages/Dashboard.tsx
+src/services/aiAgentService.ts
+src/services/api/droneApi.ts
+src/services/apiClient.ts
+src/services/pythonAIService.ts
+src/services/sseService.ts
+src/stores/aiStore.ts
+src/stores/droneStore.ts
+start-backend.bat
+start-both-fixed.bat
+start-both-servers.bat
+start-frontend.bat
+start-server-now.bat
+start-server.bat
+start-server.cmd
+start-server.js
+start-server.ps1
+supabase/.temp/cli-latest
+test-server.cmd
+test-server.js
+test-server.ps1
+test-system-health.bat
+test-system.bat
+vite.config.ts
+vite.config.ts.timestamp-1756857556345-4a86e38c49724.mjs

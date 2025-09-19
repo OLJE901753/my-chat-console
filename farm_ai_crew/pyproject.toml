@@ -1,0 +1,44 @@
+[project]
+name = "farm_ai_crew"
+version = "0.1.0"
+description = "farm-ai-crew using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.175.0,<1.0.0"
+]
+
+[project.scripts]
+farm_ai_crew = "farm_ai_crew.main:run"
+run_crew = "farm_ai_crew.main:run"
+train = "farm_ai_crew.main:train"
+replay = "farm_ai_crew.main:replay"
+test = "farm_ai_crew.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "UP", "B"]
+ignore = []
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+known-first-party = ["farm_ai_crew"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+pretty = true

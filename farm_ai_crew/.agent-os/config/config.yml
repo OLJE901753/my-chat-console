@@ -1,0 +1,49 @@
+# Agent OS Configuration for Norwegian Farm AI
+version: "1.0.0"
+
+# Project types
+project_types:
+  - name: "norwegian-farm"
+    description: "Norwegian farming optimization projects"
+    enabled: true
+  - name: "python"
+    description: "Python data science projects"
+    enabled: true
+  - name: "ai-agents"
+    description: "AI agent development projects"
+    enabled: true
+
+# Features
+features:
+  claude_code:
+    enabled: true
+  cursor:
+    enabled: true
+  vscode:
+    enabled: true
+
+# Standards
+standards:
+  python:
+    enabled: true
+    file: "python-style.md"
+  norwegian-farm:
+    enabled: true
+    file: "norwegian-farm-style.md"
+  ai-agents:
+    enabled: true
+    file: "ai-agent-style.md"
+
+# Norwegian Farm AI specific settings
+norwegian_farm:
+  focus_crops:
+    - "apple"
+    - "persimmon"
+  optimization_goals:
+    - "subsidy_maximization"
+    - "tax_optimization"
+    - "bureaucracy_bypass"
+  data_sources:
+    - "weather_api"
+    - "subsidy_database"
+    - "tax_records"

@@ -1,0 +1,28 @@
+# CrewAI Farm Management System Requirements
+# Core CrewAI and LangChain dependencies
+
+crewai==0.175.0
+langchain-groq==0.1.3
+langchain-openai==0.1.7
+langchain-core>=0.1.45,<0.2.0
+langchain-community>=0.0.20
+
+# LLM Providers
+groq==0.4.2
+openai==1.102.0
+
+# Core dependencies
+python-dotenv==1.0.0
+pydantic>=2.0.0
+typing-extensions>=4.0.0
+
+# Optional: For enhanced features
+# fastapi==0.104.1
+# uvicorn==0.24.0
+# redis==5.0.1
+# psycopg2-binary==2.9.9
+
+# Development and testing
+pytest>=7.0.0
+black>=23.0.0
+flake8>=6.0.0

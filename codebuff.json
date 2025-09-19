@@ -1,0 +1,35 @@
+{
+  "description": "Farm Management System with drone control and real-time monitoring",
+  "maxAgentSteps": 25,
+  "fileChangeHooks": [
+    {
+      "name": "typecheck",
+      "command": "npm run typecheck",
+      "filePattern": "**/*.{ts,tsx}",
+      "enabled": true
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "filePattern": "**/*.{ts,tsx,js,jsx}",
+      "enabled": true
+    }
+  ],
+  "startupProcesses": [
+    {
+      "name": "frontend",
+      "command": "npm run dev",
+      "enabled": false,
+      "stdoutFile": "logs/frontend.log",
+      "stderrFile": "logs/frontend-error.log"
+    },
+    {
+      "name": "backend",
+      "command": "npm start",
+      "cwd": "server",
+      "enabled": false,
+      "stdoutFile": "logs/backend.log",
+      "stderrFile": "logs/backend-error.log"
+    }
+  ]
+}

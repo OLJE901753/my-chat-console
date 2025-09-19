@@ -1,0 +1,122 @@
+# Farm Management CrewAI Tasks Configuration
+# Focused on daily operations, crisis management, and strategic planning
+
+daily_operations_task:
+  description: >
+    Coordinate daily farm operations by:
+    1. Analyzing current conditions (weather, crop status, equipment)
+    2. Prioritizing today's activities based on urgency and resources
+    3. Delegating specific tasks to specialist agents
+    4. Monitoring progress and adjusting plans as needed
+    5. Communicating key updates to stakeholders
+  expected_output: >
+    Comprehensive daily operations plan with task assignments and priorities
+  agent: farm_manager
+
+crisis_management_task:
+  description: >
+    Handle emergency situations by:
+    1. Rapidly assessing the situation severity
+    2. Assembling relevant specialist agents for immediate response
+    3. Developing and executing emergency action plans
+    4. Coordinating resources and communications
+    5. Monitoring resolution progress
+  expected_output: >
+    Emergency response plan with immediate actions and resource allocation
+  agent: farm_manager
+
+strategic_planning_task:
+  description: >
+    Develop long-term farm strategy by:
+    1. Analyzing historical performance and trends
+    2. Evaluating market conditions and opportunities
+    3. Planning seasonal operations and resource allocation
+    4. Setting performance targets and success metrics
+    5. Creating contingency plans for various scenarios
+  expected_output: >
+    Strategic plan with seasonal timeline, resource requirements, and success metrics
+  agent: farm_manager
+
+crop_health_assessment:
+  description: >
+    Conduct comprehensive crop health assessment by:
+    1. Analyzing drone imagery for disease and pest signs
+    2. Reviewing soil sensor data for nutrient deficiencies
+    3. Correlating weather conditions with crop stress
+    4. Recommending treatment protocols and prevention measures
+    5. Prioritizing areas requiring immediate attention
+  expected_output: >
+    Detailed crop health report with treatment recommendations and priority areas
+  agent: crop_health_specialist
+
+irrigation_optimization:
+  description: >
+    Optimize irrigation system by:
+    1. Analyzing soil moisture data from sensors
+    2. Calculating evapotranspiration rates
+    3. Reviewing weather forecasts and precipitation
+    4. Adjusting irrigation schedules for optimal water usage
+    5. Monitoring system efficiency and water savings
+  expected_output: >
+    Optimized irrigation schedule with water usage projections and efficiency metrics
+  agent: irrigation_engineer
+
+weather_analysis:
+  description: >
+    Provide comprehensive weather intelligence by:
+    1. Analyzing multiple weather data sources
+    2. Identifying microclimate patterns and variations
+    3. Assessing weather-related risks to operations
+    4. Recommending optimal work windows for field operations
+    5. Monitoring severe weather threats and providing early warnings
+  expected_output: >
+    Weather intelligence report with risk assessment and operational recommendations
+  agent: weather_intelligence
+
+drone_mission_planning:
+  description: >
+    Plan and optimize drone operations by:
+    1. Analyzing field conditions and crop status
+    2. Planning efficient flight paths for maximum coverage
+    3. Coordinating with weather conditions and safety requirements
+    4. Optimizing data collection for analysis needs
+    5. Managing battery life and flight duration constraints
+  expected_output: >
+    Comprehensive drone mission plan with flight paths, timing, and data collection strategy
+  agent: drone_operations
+
+content_generation:
+  description: >
+    Create engaging farm content by:
+    1. Analyzing drone footage and farm data for compelling stories
+    2. Identifying trending topics in agricultural content
+    3. Creating multi-platform content (social media, blog, video)
+    4. Optimizing content for maximum engagement and reach
+    5. Scheduling content for optimal posting times
+  expected_output: >
+    Multi-platform content strategy with scheduled posts and engagement optimization
+  agent: content_creation
+
+predictive_maintenance:
+  description: >
+    Conduct equipment health assessment by:
+    1. Analyzing sensor data for wear patterns and anomalies
+    2. Predicting potential equipment failures
+    3. Scheduling preventive maintenance activities
+    4. Optimizing maintenance costs and downtime
+    5. Coordinating with operational schedules
+  expected_output: >
+    Maintenance schedule with priority rankings and cost projections
+  agent: predictive_maintenance
+
+data_analytics_report:
+  description: >
+    Generate comprehensive farm analytics by:
+    1. Analyzing historical performance data
+    2. Identifying trends and optimization opportunities
+    3. Correlating multiple data sources for insights
+    4. Creating actionable recommendations for improvement
+    5. Developing performance metrics and KPIs
+  expected_output: >
+    Comprehensive analytics report with insights, trends, and actionable recommendations
+  agent: data_analytics
