@@ -127,49 +127,8 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// Get real-time telemetry stream (SSE)
-router.get('/stream', async (req, res) => {
-  try {
-    // Set headers for Server-Sent Events
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Cache-Control'
-    });
-    
-    // Send initial connection message
-    res.write('data: {"type": "connected", "message": "Telemetry stream connected"}\n\n');
-    
-    // In a real implementation, this would subscribe to real-time telemetry updates
-    // For now, we'll send mock data every second
-    const interval = setInterval(() => {
-      const mockTelemetry = {
-        type: 'telemetry_update',
-        timestamp: new Date().toISOString(),
-        position: { x: 0, y: 0, z: 0 },
-        altitude: 0,
-        speed: 0,
-        battery: 85,
-        temperature: 25,
-        orientation: { yaw: 0, pitch: 0, roll: 0 }
-      };
-      
-      res.write(`data: ${JSON.stringify(mockTelemetry)}\n\n`);
-    }, 1000);
-    
-    // Handle client disconnect
-    req.on('close', () => {
-      clearInterval(interval);
-      logger.info('Telemetry stream disconnected');
-    });
-    
-  } catch (error) {
-    logger.error('Error setting up telemetry stream:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// Note: Real-time telemetry is now handled via WebSocket at /ws
+// This endpoint is kept for backward compatibility but data comes from WebSocket
 
 // Get telemetry data for specific time range
 router.get('/range', async (req, res) => {

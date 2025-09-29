@@ -7,18 +7,18 @@ A real-time farm management system with drone control, weather monitoring, and A
 - **Frontend**: React with TypeScript, Vite dev server (port 8081)
 - **Backend**: Express.js server (port 3001) 
 - **Database**: Supabase (PostgreSQL)
-- **Real-time**: Server-Sent Events (SSE)
+- **Real-time**: WebSocket for live data streaming
 
 ## Key Components
 
 ### Dashboard
 - `RealtimeDashboard.tsx`: Main dashboard with tabs for overview, drone, sensors, weather, agents, missions
 - `WeatherDashboard.tsx`: Weather data display (previously Norwegian, now English)
-- Real-time data updates via SSE
+- Real-time data updates via WebSocket
 
 ### Backend Services
 - `SupabaseService`: Database operations with null safety guards
-- SSE routes: Real-time data streaming
+- WebSocket routes: Real-time data streaming
 - Health checks and performance monitoring
 
 ## Development Setup
@@ -29,7 +29,7 @@ A real-time farm management system with drone control, weather monitoring, and A
 ## Important Notes
 - Frontend proxies API calls to backend via Vite config
 - Supabase service has graceful degradation when not configured
-- SSE routes are exempt from timeout and rate limiting
+- WebSocket routes are exempt from timeout and rate limiting
 - All Norwegian text has been translated to English
 
 ## Environment Variables
@@ -52,8 +52,8 @@ A real-time farm management system with drone control, weather monitoring, and A
 - **Graceful Fallbacks**: System falls back to simulation when Python service unavailable
 - **CRITICAL SECURITY FIX**: Removed dangerous GRANT ALL permissions, implemented proper RLS with least privilege
 - **CORS Configuration**: Fixed default FRONTEND_URL from 8080 to 8081 to match development server
-- **Real-time System**: Re-enabled telemetry routes and properly initialized SSE service
-- **SSE Client Tracking**: Fixed heartbeat bug by replacing Set with Map for proper client management
+- **Real-time System**: Re-enabled telemetry routes and properly initialized WebSocket service
+- **WebSocket Client Tracking**: Fixed heartbeat bug by replacing Set with Map for proper client management
 - Translated dashboard from Norwegian to English
 - Added proper null guards to SupabaseService methods
 - Improved CORS handling for multiple origins

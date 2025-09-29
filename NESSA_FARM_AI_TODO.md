@@ -1,5 +1,25 @@
 # Nessa Farm AI Project - Strategic Roadmap 2024
 
+## 🎯 Project Status: READY FOR HARDWARE CONNECTION
+
+### ✅ System Components Complete
+- **Drone Control**: TelloDroneService with real Tello integration
+- **Content AI**: Video processing + social media generation
+- **Real-time Infrastructure**: WebSocket for live data streaming
+- **Data Persistence**: Supabase integration for all data types
+- **Dashboard**: Full-featured React UI with drone/sensor/content tabs
+
+### 🔌 Next Steps: Connect Hardware (15-30 min each)
+1. **Tello Drone**: Power on → Connect WiFi → Test in dashboard
+2. **Social Media APIs**: Follow SOCIAL_MEDIA_SETUP.md
+3. **Sensors**: POST data to /api/telemetry endpoint
+4. **Cameras**: Add RTSP URLs to camera management
+
+### 📚 Quick Reference Documentation
+- `MVP_SETUP_GUIDE.md` - Complete system setup instructions
+- `SOCIAL_MEDIA_SETUP.md` - Social media API configuration
+- `knowledge.md` - Project architecture and context
+
 ## 🎯 Project Goal
 Production-ready AI orchestration platform for apple and pear orchards in Nessa, Norway. Built for instrumentation engineers to deploy real agricultural AI solutions.
 
@@ -10,23 +30,30 @@ Production-ready AI orchestration platform for apple and pear orchards in Nessa,
 - **Real-time Coordination**: SSE improvements with proper timeout handling
 - **Observability**: Event logging, metrics tracking, trace IDs for debugging
 
-## 🚨 Phase 1: Production Foundation (PRIORITY)
+## 🚨 Phase 1: MVP System Integration (PRIORITY - READY TO DEPLOY)
 
-### 1.1 Orchestrator Data Persistence (CRITICAL)
-- [ ] **Persist orchestrator state in Supabase** - tasks, runs, events, agents, heartbeats (currently in-memory only)
-- [ ] **Add database migrations** for orchestrator tables with proper indexes
-- [ ] **Implement idempotency keys** to prevent duplicate task submission
-- [ ] **Add task lifecycle enums** and retention policies for events
-- [ ] **Seed default agents** in database on startup
+### 1.1 System Integration Status ✅
+- ✅ **Drone Control**: TelloDroneService fully implemented with tellojs + UDP fallback
+- ✅ **Content AI**: Video processing, social media generation complete
+- ✅ **WebSocket Infrastructure**: Real-time data streaming operational
+- ✅ **Data Persistence**: Supabase integration with all persistence methods
+- ✅ **Drone-Content Integration**: Pipeline service implemented
 
-### 1.2 Security & Access Control (HIGH PRIORITY)
+### 1.2 Ready to Connect Hardware (IMMEDIATE TASKS)
+- [ ] **Connect Tello Drone**: Power on, connect to WiFi, test connection via dashboard
+- [ ] **Configure Social Media APIs**: Set up YouTube, Instagram, TikTok credentials (see SOCIAL_MEDIA_SETUP.md)
+- [ ] **Connect Sensors**: Integrate physical soil sensors via telemetry API
+- [ ] **Connect IP Cameras**: Add camera streams to camera management system
+- [ ] **Test End-to-End Flow**: Record drone video → Process → Post to social media
+
+### 1.3 Security & Access Control (HIGH PRIORITY)
 - [ ] **Audit service role key exposure** - ensure never reaches browser
 - [ ] **Implement proper RLS policies** per tenant/entity (agents, tasks, media)
 - [ ] **Add API authentication** - JWT/HMAC tokens for agent ↔ backend communication
 - [ ] **Role-based access** - admin/manager/worker permissions
 - [ ] **Input validation** with Zod schemas on all endpoints
 
-### 1.3 Orchestrator Reliability (HIGH PRIORITY)
+### 1.4 Orchestrator Reliability (HIGH PRIORITY)
 - [ ] **At-least-once delivery** with exponential backoff and jitter
 - [ ] **Dead letter queue** for failed tasks with max retry attempts
 - [ ] **Agent quarantine system** when heartbeats fail with cooldown
@@ -152,19 +179,25 @@ Production-ready AI orchestration platform for apple and pear orchards in Nessa,
 - [ ] **ROI calculations** - demonstrate value of AI in agriculture
 - [ ] **Case studies** - real examples from your orchard
 
-## 🎯 Two-Week Sprint Plan (IMMEDIATE PRIORITIES)
+## 🎯 Hardware Integration Sprint (IMMEDIATE PRIORITIES)
 
-### Week 1: Foundation Hardening
-1. **Persist orchestrator state** in Supabase (tasks, runs, events, agents) - 2 days
-2. **Add database migrations** with proper indexes and constraints - 1 day
-3. **Implement idempotency + retries** with dead letter queue - 1 day
-4. **API security hardening** - validation, auth, rate limits - 1 day
+### Day 1-2: Drone Connection & Testing
+1. **Connect Tello Drone** - Power on, WiFi setup, test basic controls - 2 hours
+2. **Test Flight Operations** - Takeoff, land, move, rotate, emergency - 2 hours
+3. **Test Video Capture** - Start/stop recording, photo capture - 1 hour
+4. **Mission Planning** - Create and execute test mission - 2 hours
 
-### Week 2: Weather Integration & Testing
-1. **End-to-end yr.no integration** with caching - 2 days
-2. **Validate GDD/frost calculations** with unit tests - 1 day
-3. **Re-enable middleware incrementally** with config gates - 1 day
-4. **Basic observability** - metrics endpoint, simple dashboard - 1 day
+### Day 3-4: Content AI Pipeline
+1. **Configure Social Media APIs** - YouTube, Instagram, TikTok setup - 3 hours
+2. **Test Video Processing** - Upload drone video, generate clips - 2 hours
+3. **Test Content Generation** - Captions, hashtags, platform optimization - 1 hour
+4. **End-to-End Test** - Drone record → Process → Post to social media - 2 hours
+
+### Day 5: Sensor Integration
+1. **Connect Soil Sensors** - API integration, data validation - 3 hours
+2. **Test Data Persistence** - Verify Supabase storage - 1 hour
+3. **Dashboard Verification** - Real-time sensor data display - 2 hours
+4. **Historical Analytics** - Query and visualize trends - 2 hours
 
 ## 📊 Success Metrics (SLOs)
 

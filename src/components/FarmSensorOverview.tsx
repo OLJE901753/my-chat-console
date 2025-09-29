@@ -57,7 +57,7 @@ const METRICS: Array<{
 
 function useTelemetryFeed() {
   const [data, setData] = useState<TelemetryPoint[]>([]);
-  const sseRef = useRef<EventSource | null>(null);
+  // Real-time data now comes from WebSocket via useRealtimeData hook
 
   useEffect(() => {
     let isMounted = true;
@@ -88,50 +88,15 @@ function useTelemetryFeed() {
       }
     };
 
-    const connectSSE = () => {
-      const sse = new EventSource('http://localhost:3001/api/telemetry/stream');
-      sse.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data);
-          if (msg.type === 'telemetry_update') {
-            const now = Date.now();
-            const point: TelemetryPoint = {
-              timestamp: msg.timestamp,
-              altitude: Number(msg.altitude ?? 0),
-              speed: Number(msg.speed ?? 0),
-              battery: Number(msg.battery ?? 0),
-              temperature: Number(msg.temperature ?? 0),
-              // Mock live soil sensor data
-              npk_nitrogen: 150 + Math.sin(now * 0.0001) * 20 + Math.random() * 10,
-              npk_phosphorus: 45 + Math.sin(now * 0.00008) * 8 + Math.random() * 5,
-              npk_potassium: 180 + Math.sin(now * 0.00012) * 25 + Math.random() * 15,
-              ph: 6.8 + Math.sin(now * 0.00005) * 0.3 + Math.random() * 0.2,
-              moisture: 65 + Math.sin(now * 0.00015) * 15 + Math.random() * 8,
-              electrical_conductivity: 1.2 + Math.sin(now * 0.00007) * 0.3 + Math.random() * 0.1,
-            };
-            setData((prev) => {
-              const next = [...prev, point];
-              return next.slice(-120); // keep last 120 points
-            });
-          }
-        } catch {
-          // ignore bad frames
-        }
-      };
-      sse.onerror = () => {
-        // Reconnect simply by closing and retrying later
-        sse.close();
-        setTimeout(connectSSE, 3000);
-      };
-      sseRef.current = sse;
-    };
+    // Real-time data now comes from WebSocket via useRealtimeData hook
+    // No need for SSE connection
 
     loadHistory();
-    connectSSE();
+    // Real-time data now comes from WebSocket
 
     return () => {
       isMounted = false;
-      if (sseRef.current) sseRef.current.close();
+      // Cleanup handled by WebSocket hook
     };
   }, []);
 

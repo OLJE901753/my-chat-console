@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { sseService } from '@/services/sseService';
+// SSE service removed - using WebSocket instead
 
 interface RealtimeContextType {
   connected: boolean;
@@ -42,38 +42,22 @@ const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
     setConnecting(true);
     setError(null);
     
-    try {
-      await sseService.connect();
-      setConnected(true);
-      setLastActivity(new Date());
-      if (!hasShownConnectToastRef.current) {
-        toast({
-          title: "Connected",
-          description: "Real-time data connection established",
-        });
-        hasShownConnectToastRef.current = true;
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Connection failed';
-      setError(errorMessage);
-      // Don't show toast for connection failures on startup
-      console.warn('SSE connection failed:', errorMessage);
-    } finally {
-      setConnecting(false);
-    }
+    // SSE connection disabled - using WebSocket instead
+    setConnected(false);
+    setError('SSE service disabled - using WebSocket for real-time data');
+    setConnecting(false);
   }, [connecting, connected, toast]);
 
   const disconnect = React.useCallback((): void => {
-    sseService.disconnect();
+    // SSE service disabled - using WebSocket instead
     setConnected(false);
     setError(null);
   }, []);
 
   const subscribe = <T,>(type: string, callback: (data: T) => void) => {
-    return sseService.subscribe(type, (data: T) => {
-      setLastActivity(new Date());
-      callback(data);
-    });
+    // SSE service disabled - using WebSocket instead
+    console.warn('SSE subscribe disabled - using WebSocket for real-time data');
+    return () => {}; // Return empty unsubscribe function
   };
 
   // Auto-connect on mount (with error handling) - DISABLED to prevent CORS errors
