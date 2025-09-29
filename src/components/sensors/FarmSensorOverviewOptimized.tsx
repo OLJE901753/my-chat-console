@@ -96,7 +96,7 @@ Sparkline.displayName = 'Sparkline';
 // Optimized telemetry hook with proper cleanup and memoization
 const useTelemetryFeed = () => {
   const [data, setData] = useState<TelemetryPoint[]>([]);
-  // Real-time data now comes from WebSocket via useRealtimeData hook
+  // Real-time data comes from WebSocket via useRealtimeData hook
   const isMountedRef = useRef(true);
 
   const loadHistory = useCallback(async () => {
@@ -128,12 +128,12 @@ const useTelemetryFeed = () => {
     }
   }, []);
 
-  // Real-time data now comes from WebSocket via useRealtimeData hook
-  // No need for SSE connection
+  // Real-time data comes from WebSocket via useRealtimeData hook
+  // Real-time data handled by WebSocket
 
   useEffect(() => {
     loadHistory();
-    // Real-time data now comes from WebSocket
+    // Real-time data comes from WebSocket
 
     return () => {
       isMountedRef.current = false;

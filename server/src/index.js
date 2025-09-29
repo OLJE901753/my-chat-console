@@ -56,7 +56,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts for development
       imgSrc: ["'self'", "data:", "https:", "http://localhost:*"], // Allow localhost images including favicon
-      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"], // Allow SSE and WebSocket connections
+      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"], // Allow WebSocket connections
       fontSrc: ["'self'", "data:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
@@ -99,13 +99,13 @@ app.use(cors({
 // Performance monitoring
 // app.use(performanceMonitor);
 
-// Rate limiting with performance tracking (relax in development, exempt SSE)
+// Rate limiting with performance tracking (relax in development)
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_REQUESTS = process.env.NODE_ENV === 'production' ? 100 : 10000;
 // const limiter = createRateLimiter(WINDOW_MS, MAX_REQUESTS);
 // app.use('/api/', (req, res, next) => {
-//   // Skip rate limiting for SSE endpoints
-//   if (req.path.includes('/events') || req.path.includes('/sse')) {
+//   // Skip rate limiting for WebSocket endpoints
+//   if (req.path.includes('/ws')) {
 //     return next();
 //   }
 //   limiter(req, res, next);
@@ -113,10 +113,10 @@ const MAX_REQUESTS = process.env.NODE_ENV === 'production' ? 100 : 10000;
 
 // (CORS already configured above)
 
-// Request timeout (exempt SSE routes)
+// Request timeout (exempt WebSocket routes)
 // app.use((req, res, next) => {
-//   // Skip timeout for SSE endpoints
-//   if (req.path.includes('/events') || req.path.includes('/sse')) {
+//   // Skip timeout for WebSocket endpoints
+//   if (req.path.includes('/ws')) {
 //     return next();
 //   }
 //   timeoutHandler(30000)(req, res, next);
@@ -197,7 +197,7 @@ app.get('/api/ws/stats', (req, res) => {
   });
 });
 
-// Server-Sent Events (SSE) for real-time data streaming
+// WebSocket for real-time data streaming
 
 // Initialize services
 let aiAgentService;
@@ -217,10 +217,7 @@ async function initializeServices() {
       console.log('⚠️ Supabase service not available');
     }
 
-    // Initialize SSE service - DISABLED
-    // console.log('📡 Initializing SSE service...');
-    // sseService = new SSEService();
-    // console.log('✅ SSE service initialized');
+    // SSE service removed - using WebSocket instead
 
     // Initialize WebSocket service
     console.log('🌐 Initializing WebSocket service...');

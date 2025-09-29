@@ -57,7 +57,7 @@ const METRICS: Array<{
 
 function useTelemetryFeed() {
   const [data, setData] = useState<TelemetryPoint[]>([]);
-  // Real-time data now comes from WebSocket via useRealtimeData hook
+  // Real-time data comes from WebSocket via useRealtimeData hook
 
   useEffect(() => {
     let isMounted = true;
@@ -88,15 +88,15 @@ function useTelemetryFeed() {
       }
     };
 
-    // Real-time data now comes from WebSocket via useRealtimeData hook
-    // No need for SSE connection
+    // Real-time data comes from WebSocket via useRealtimeData hook
+    // Real-time data handled by WebSocket
 
     loadHistory();
-    // Real-time data now comes from WebSocket
+    // Real-time data comes from WebSocket
 
     return () => {
       isMounted = false;
-      // Cleanup handled by WebSocket hook
+      // Cleanup handled by WebSocket service
     };
   }, []);
 

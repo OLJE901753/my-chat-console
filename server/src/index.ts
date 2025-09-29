@@ -38,7 +38,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts for development
       imgSrc: ["'self'", "data:", "https:", "http://localhost:*"], // Allow localhost images including favicon
-      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"], // Allow SSE and WebSocket connections
+      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"], // Allow WebSocket connections
       fontSrc: ["'self'", "data:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
@@ -180,10 +180,7 @@ async function initializeServices(): Promise<void> {
       console.log('⚠️ Supabase service not available');
     }
 
-    // Initialize SSE service - DISABLED
-    // console.log('📡 Initializing SSE service...');
-    // new SSEService();
-    // console.log('✅ SSE service initialized');
+    // SSE service removed - using WebSocket instead
 
     // Initialize WebSocket service
     console.log('🌐 Initializing WebSocket service...');

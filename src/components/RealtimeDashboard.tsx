@@ -54,7 +54,7 @@ const RealtimeDashboard: React.FC = () => {
     scrollToBottom,
   } = useWebSocket();
 
-  // Use WebSocket state for connection status instead of SSE
+  // Use WebSocket state for connection status
   const isConnected = wsState.isConnected;
   const connectionStatus = wsState.isConnecting ? 'connecting' : wsState.isConnected ? 'connected' : 'disconnected';
 

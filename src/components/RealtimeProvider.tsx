@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-// SSE service removed - using WebSocket instead
+// Real-time data now handled by WebSocket service
 
 interface RealtimeContextType {
   connected: boolean;
@@ -42,29 +42,29 @@ const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
     setConnecting(true);
     setError(null);
     
-    // SSE connection disabled - using WebSocket instead
+    // Real-time data now handled by WebSocket service
     setConnected(false);
-    setError('SSE service disabled - using WebSocket for real-time data');
+    setError('Real-time data now handled by WebSocket service');
     setConnecting(false);
   }, [connecting, connected, toast]);
 
   const disconnect = React.useCallback((): void => {
-    // SSE service disabled - using WebSocket instead
+    // Real-time data now handled by WebSocket service
     setConnected(false);
     setError(null);
   }, []);
 
   const subscribe = <T,>(type: string, callback: (data: T) => void) => {
-    // SSE service disabled - using WebSocket instead
-    console.warn('SSE subscribe disabled - using WebSocket for real-time data');
+    // Real-time data now handled by WebSocket service
+    console.warn('Real-time data now handled by WebSocket service');
     return () => {}; // Return empty unsubscribe function
   };
 
   // Auto-connect on mount (with error handling) - DISABLED to prevent CORS errors
   useEffect(() => {
-    // SSE connection disabled to prevent CORS errors with /api/events endpoint
+    // Real-time data now handled by WebSocket service
     // The original RealtimeDashboard now uses WebSocket service instead
-    console.log('RealtimeProvider: SSE connection disabled to prevent CORS errors');
+    console.log('RealtimeProvider: Real-time data now handled by WebSocket service');
     
     return () => {
       disconnect();
