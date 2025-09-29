@@ -9,14 +9,24 @@ import {
   Zap,
   MapPin,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Play,
+  Pause,
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { useRealtime } from '@/components/RealtimeProvider';
+import { useWebSocket } from '@/services/websocketService';
+import MetricsOverview from '@/components/dashboard/MetricsOverview';
+import MetricsChart from '@/components/dashboard/MetricsChart';
+import LogEntry from '@/components/dashboard/LogEntry';
+import StatusChip from '@/components/ui/StatusChip';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import WeatherDashboard from '@/components/WeatherDashboard';
 import { useDroneTelemetry } from '@/hooks/useRealtimeData';
 import { useSensorReadings } from '@/hooks/useRealtimeData';
@@ -28,6 +38,83 @@ import { useSystemAlerts } from '@/hooks/useRealtimeData';
 const RealtimeDashboard: React.FC = () => {
   const { connected, lastActivity } = useRealtime();
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // WebSocket integration
+  const {
+    state: wsState,
+    logs,
+    metrics,
+    recentLogs,
+    autoScroll,
+    isPaused,
+    toggleAutoScroll,
+    togglePause,
+    clearLogs,
+    reconnect,
+    scrollToBottom,
+  } = useWebSocket();
+
+  // Use WebSocket state for connection status instead of SSE
+  const isConnected = wsState.isConnected;
+  const connectionStatus = wsState.isConnecting ? 'connecting' : wsState.isConnected ? 'connected' : 'disconnected';
+
+  const [showDetails, setShowDetails] = useState(false);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const logsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Generate trend data from logs
+  const trendData = {
+    success: logs.reduce((acc, log) => {
+      const minute = new Date(log.timestamp).toISOString().slice(0, 16);
+      if (!acc[minute]) {
+        acc[minute] = { timestamp: minute, value: 0 };
+      }
+      if (log.level === 'success') {
+        acc[minute].value++;
+      }
+      return acc;
+    }, {} as Record<string, { timestamp: string; value: number }>),
+
+    failure: logs.reduce((acc, log) => {
+      const minute = new Date(log.timestamp).toISOString().slice(0, 16);
+      if (!acc[minute]) {
+        acc[minute] = { timestamp: minute, value: 0 };
+      }
+      if (log.level === 'error') {
+        acc[minute].value++;
+      }
+      return acc;
+    }, {} as Record<string, { timestamp: string; value: number }>),
+
+    cost: logs.reduce((acc, log) => {
+      const minute = new Date(log.timestamp).toISOString().slice(0, 16);
+      if (!acc[minute]) {
+        acc[minute] = { timestamp: minute, value: 0 };
+      }
+      if (log.cost) {
+        acc[minute].value += log.cost;
+      }
+      return acc;
+    }, {} as Record<string, { timestamp: string; value: number }>),
+  };
+
+  const successTrendData = Object.values(trendData.success);
+  const failureTrendData = Object.values(trendData.failure);
+  const costTrendData = Object.values(trendData.cost);
+
+  // Handle scroll events
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 10;
+    setIsUserScrolling(!isAtBottom);
+  };
+
+  // Auto-scroll when new logs arrive
+  useEffect(() => {
+    if (autoScroll && !isPaused && !isUserScrolling) {
+      scrollToBottom();
+    }
+  }, [logs.length, autoScroll, isPaused, isUserScrolling, scrollToBottom]);
 
   return (
     <div className="space-y-6">
@@ -42,18 +129,23 @@ const RealtimeDashboard: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Badge 
-                variant={connected ? "default" : "destructive"}
-                className={connected ? "bg-green-500" : "bg-red-500"}
+                variant={isConnected ? "default" : "destructive"}
+                className={isConnected ? "bg-green-500" : "bg-red-500"}
               >
-                {connected ? (
+                {wsState.isConnecting ? (
+                  <>
+                    <Activity className="h-3 w-3 mr-1 animate-spin" />
+                    Connecting...
+                  </>
+                ) : isConnected ? (
                   <>
                     <Wifi className="h-3 w-3 mr-1" />
-                    Live
+                    Connected
                   </>
                 ) : (
                   <>
                     <WifiOff className="h-3 w-3 mr-1" />
-                    Offline
+                    Disconnected
                   </>
                 )}
               </Badge>
@@ -68,8 +160,10 @@ const RealtimeDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="experiments">Experiments</TabsTrigger>
+              <TabsTrigger value="logs">Live Logs</TabsTrigger>
               <TabsTrigger value="drone">Drone</TabsTrigger>
               <TabsTrigger value="sensors">Sensors</TabsTrigger>
               <TabsTrigger value="weather">Weather</TabsTrigger>
@@ -79,6 +173,130 @@ const RealtimeDashboard: React.FC = () => {
 
             <TabsContent value="overview" className="space-y-4">
               <OverviewTab />
+            </TabsContent>
+
+            <TabsContent value="experiments" className="space-y-4">
+              <div className="space-y-6">
+                {/* WebSocket Connection Status */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <StatusChip
+                      status={wsState.isConnecting ? 'running' : wsState.isConnected ? 'success' : 'error'}
+                      label={wsState.isConnecting ? 'CONNECTING' : wsState.isConnected ? 'CONNECTED' : 'DISCONNECTED'}
+                      size="md"
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {logs.length} log entries
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleAutoScroll}
+                      className={autoScroll ? 'bg-blue-100 text-blue-800' : ''}
+                    >
+                      {autoScroll ? 'Auto-scroll ON' : 'Auto-scroll OFF'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={togglePause}
+                      className={isPaused ? 'bg-red-100 text-red-800' : ''}
+                    >
+                      {isPaused ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      {isPaused ? 'PAUSED' : 'LIVE'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearLogs}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={reconnect}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Metrics Overview */}
+                <MetricsOverview metrics={metrics} />
+
+                {/* Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <MetricsChart
+                    title="Success/Failure Trends"
+                    data={successTrendData}
+                    type="line"
+                    color="#10B981"
+                  />
+                  <MetricsChart
+                    title="Cost Over Time"
+                    data={costTrendData}
+                    type="line"
+                    color="#F59E0B"
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="logs" className="space-y-4">
+              <div className="space-y-4">
+                {/* Log Controls */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Real-Time Logs
+                    </h3>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {logs.length} entries
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={showDetails}
+                        onChange={(e) => setShowDetails(e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      />
+                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                        Show Details
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Logs Container */}
+                <div
+                  ref={logsContainerRef}
+                  id="logs-container"
+                  className="h-96 overflow-y-auto p-4 space-y-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+                  onScroll={handleScroll}
+                >
+                  {logs.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                      <div className="text-center">
+                        <Activity className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="mt-2">No logs yet. Waiting for data...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    recentLogs.map((log) => (
+                      <LogEntry
+                        key={log.id}
+                        log={log}
+                        showDetails={showDetails}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="drone" className="space-y-4">
@@ -133,7 +351,7 @@ const OverviewTab: React.FC = () => {
       </Card>
 
       {/* Drone Status */}
-      <Card className="glass-card border-blue-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardContent className="p-4">
           <div className="flex items-center space-x-2">
             <Zap className="h-5 w-5 text-blue-400" />
@@ -148,7 +366,7 @@ const OverviewTab: React.FC = () => {
       </Card>
 
       {/* Sensors Status */}
-      <Card className="glass-card border-green-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardContent className="p-4">
           <div className="flex items-center space-x-2">
             <Droplets className="h-5 w-5 text-green-400" />
@@ -163,7 +381,7 @@ const OverviewTab: React.FC = () => {
       </Card>
 
       {/* Weather Status */}
-      <Card className="glass-card border-cyan-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardContent className="p-4">
           <div className="flex items-center space-x-2">
             <Wind className="h-5 w-5 text-cyan-400" />
@@ -178,7 +396,7 @@ const OverviewTab: React.FC = () => {
       </Card>
 
       {/* Agents Status */}
-      <Card className="glass-card border-purple-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardContent className="p-4">
           <div className="flex items-center space-x-2">
             <Activity className="h-5 w-5 text-purple-400" />
@@ -193,7 +411,7 @@ const OverviewTab: React.FC = () => {
       </Card>
 
       {/* Alerts */}
-      <Card className="glass-card border-red-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardContent className="p-4">
           <div className="flex items-center space-x-2">
             <AlertTriangle className="h-5 w-5 text-red-400" />
@@ -225,7 +443,7 @@ const DroneTab: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Card className="glass-card border-blue-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Battery className="h-4 w-4" />
@@ -238,7 +456,7 @@ const DroneTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-green-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <MapPin className="h-4 w-4" />
@@ -250,7 +468,7 @@ const DroneTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-yellow-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Wind className="h-4 w-4" />
@@ -262,7 +480,7 @@ const DroneTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-red-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Thermometer className="h-4 w-4" />
@@ -274,7 +492,7 @@ const DroneTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-purple-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Position</CardTitle>
         </CardHeader>
@@ -288,7 +506,7 @@ const DroneTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-cyan-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Status</CardTitle>
         </CardHeader>
@@ -336,7 +554,7 @@ const SensorsTab: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Card className="glass-card border-green-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Droplets className="h-4 w-4" />
@@ -349,7 +567,7 @@ const SensorsTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-blue-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Activity className="h-4 w-4" />
@@ -361,7 +579,7 @@ const SensorsTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-yellow-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Zap className="h-4 w-4" />
@@ -373,7 +591,7 @@ const SensorsTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-red-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Thermometer className="h-4 w-4" />
@@ -385,7 +603,7 @@ const SensorsTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-cyan-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">NPK Levels</CardTitle>
         </CardHeader>
@@ -405,7 +623,7 @@ const SensorsTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-purple-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Location</CardTitle>
         </CardHeader>
@@ -437,7 +655,7 @@ const WeatherTab: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Card className="glass-card border-red-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Thermometer className="h-4 w-4" />
@@ -450,7 +668,7 @@ const WeatherTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-blue-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Droplets className="h-4 w-4" />
@@ -462,7 +680,7 @@ const WeatherTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-green-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Wind className="h-4 w-4" />
@@ -474,7 +692,7 @@ const WeatherTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-yellow-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Activity className="h-4 w-4" />
@@ -486,7 +704,7 @@ const WeatherTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-cyan-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Zap className="h-4 w-4" />
@@ -498,7 +716,7 @@ const WeatherTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-purple-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Precipitation</CardTitle>
         </CardHeader>
@@ -530,7 +748,7 @@ const AgentsTab: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card className="glass-card border-purple-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <Activity className="h-4 w-4" />
@@ -560,7 +778,7 @@ const AgentsTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-blue-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Performance</CardTitle>
         </CardHeader>
@@ -602,7 +820,7 @@ const MissionsTab: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card className="glass-card border-green-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center space-x-2">
             <MapPin className="h-4 w-4" />
@@ -636,7 +854,7 @@ const MissionsTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-yellow-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Details</CardTitle>
         </CardHeader>

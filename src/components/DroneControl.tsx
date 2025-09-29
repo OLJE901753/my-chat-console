@@ -706,7 +706,7 @@ const DroneControl: React.FC = () => {
         <TabsContent value="control" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Basic Controls */}
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader>
                 <CardTitle className="gradient-text">Basic Flight Controls</CardTitle>
                 <CardDescription>Essential drone operations</CardDescription>
@@ -743,7 +743,7 @@ const DroneControl: React.FC = () => {
             </Card>
 
             {/* Movement Controls */}
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader>
                 <CardTitle className="gradient-text">Movement Controls</CardTitle>
                 <CardDescription>Precise drone positioning</CardDescription>
@@ -1012,7 +1012,7 @@ const DroneControl: React.FC = () => {
         {/* Telemetry Tab */}
         <TabsContent value="telemetry" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader className="pb-2">
                 <CardTitle className="gradient-text flex items-center gap-2 text-sm">
                   <Battery className="h-4 w-4" />
@@ -1025,7 +1025,7 @@ const DroneControl: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader className="pb-2">
                 <CardTitle className="gradient-text flex items-center gap-2 text-sm">
                   <ArrowUp className="h-4 w-4" />
@@ -1038,7 +1038,7 @@ const DroneControl: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-blue-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader className="pb-2">
                 <CardTitle className="gradient-text flex items-center gap-2 text-sm">
                   <Wind className="h-4 w-4" />
@@ -1051,7 +1051,7 @@ const DroneControl: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader className="pb-2">
                 <CardTitle className="gradient-text flex items-center gap-2 text-sm">
                   <Navigation className="h-4 w-4" />
@@ -1064,7 +1064,7 @@ const DroneControl: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader className="pb-2">
                 <CardTitle className="gradient-text flex items-center gap-2 text-sm">
                   <Thermometer className="h-4 w-4" />
@@ -1077,7 +1077,7 @@ const DroneControl: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-red-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader className="pb-2">
                 <CardTitle className="gradient-text flex items-center gap-2 text-sm">
                   <Shield className="h-4 w-4" />
@@ -1115,7 +1115,7 @@ const DroneControl: React.FC = () => {
             </Card>
           </div>
 
-          <Card className="glass-card border-lime-500/20">
+          <Card className="glass-card border-lime-500/30">
             <CardHeader>
               <CardTitle className="gradient-text">Position & Orientation</CardTitle>
             </CardHeader>
@@ -1145,7 +1145,7 @@ const DroneControl: React.FC = () => {
         {/* Camera Tab */}
         <TabsContent value="camera" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader>
                 <CardTitle className="gradient-text">Camera Controls</CardTitle>
                 <CardDescription>Photo and video operations</CardDescription>
@@ -1182,7 +1182,7 @@ const DroneControl: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader>
                 <CardTitle className="gradient-text">Live Feed</CardTitle>
                 <CardDescription>Real-time camera view</CardDescription>
@@ -1202,7 +1202,7 @@ const DroneControl: React.FC = () => {
 
         {/* Missions Tab */}
         <TabsContent value="missions" className="space-y-4">
-          <Card className="glass-card border-lime-500/20">
+          <Card className="glass-card border-lime-500/30">
             <CardHeader>
               <CardTitle className="gradient-text">Mission Management</CardTitle>
               <CardDescription>Plan and execute automated flights</CardDescription>
@@ -1235,7 +1235,7 @@ const DroneControl: React.FC = () => {
         {/* History Tab */}
         <TabsContent value="history" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader>
                 <CardTitle className="gradient-text">Command History</CardTitle>
                 <CardDescription>Recent drone commands</CardDescription>
@@ -1260,7 +1260,7 @@ const DroneControl: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-lime-500/20">
+            <Card className="glass-card border-lime-500/30">
               <CardHeader>
                 <CardTitle className="gradient-text">Media Library</CardTitle>
                 <CardDescription>Photos and recordings</CardDescription>

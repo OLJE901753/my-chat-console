@@ -119,7 +119,7 @@ const SensorNetwork = () => {
     <div className="space-y-6">
       {/* Network Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Active Sensors</CardTitle>
           </CardHeader>
@@ -131,7 +131,7 @@ const SensorNetwork = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Data Points</CardTitle>
           </CardHeader>
@@ -143,7 +143,7 @@ const SensorNetwork = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Coverage</CardTitle>
           </CardHeader>
@@ -155,7 +155,7 @@ const SensorNetwork = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Network Health</CardTitle>
           </CardHeader>

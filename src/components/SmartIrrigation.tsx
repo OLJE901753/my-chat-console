@@ -137,7 +137,7 @@ const SmartIrrigation = () => {
     <div className="space-y-6">
       {/* System Overview */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Water Used</CardTitle>
           </CardHeader>
@@ -149,7 +149,7 @@ const SmartIrrigation = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Water Saved</CardTitle>
           </CardHeader>
@@ -161,7 +161,7 @@ const SmartIrrigation = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Efficiency</CardTitle>
           </CardHeader>
@@ -173,7 +173,7 @@ const SmartIrrigation = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Active Zones</CardTitle>
           </CardHeader>
@@ -185,7 +185,7 @@ const SmartIrrigation = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Pressure</CardTitle>
           </CardHeader>
@@ -197,7 +197,7 @@ const SmartIrrigation = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Weather</CardTitle>
           </CardHeader>
@@ -324,7 +324,7 @@ const SmartIrrigation = () => {
 
       {/* System Controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader>
             <CardTitle>System Controls</CardTitle>
             <CardDescription>Master irrigation system management</CardDescription>
@@ -339,7 +339,7 @@ const SmartIrrigation = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader>
             <CardTitle>Weather Integration</CardTitle>
             <CardDescription>AI weather-based irrigation adjustments</CardDescription>

@@ -398,7 +398,7 @@ const FarmSensorOverview: React.FC = () => {
               const values = series[m.key] || [];
               const current = latest ? (latest[m.key] as number) : undefined;
               return (
-                <Card key={m.key} className="glass-card border-lime-500/20">
+                <Card key={m.key} className="glass-card border-lime-500/30">
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center justify-between text-base">
                       <span className="flex items-center gap-2 gradient-text">

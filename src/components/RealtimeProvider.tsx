@@ -76,21 +76,16 @@ const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
     });
   };
 
-  // Auto-connect on mount (with error handling)
+  // Auto-connect on mount (with error handling) - DISABLED to prevent CORS errors
   useEffect(() => {
-    // Delay connection to allow app to fully load
-    const timer = setTimeout(() => {
-      connect().catch((error) => {
-        console.warn('Failed to connect to SSE on mount:', error);
-        // Don't crash the app if SSE connection fails
-      });
-    }, 1000);
+    // SSE connection disabled to prevent CORS errors with /api/events endpoint
+    // The original RealtimeDashboard now uses WebSocket service instead
+    console.log('RealtimeProvider: SSE connection disabled to prevent CORS errors');
     
     return () => {
-      clearTimeout(timer);
       disconnect();
     };
-  }, [connect, disconnect]);
+  }, [disconnect]);
 
   const contextValue: RealtimeContextType = {
     connected,

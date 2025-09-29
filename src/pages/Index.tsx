@@ -29,8 +29,9 @@ const Index = () => {
         description: 'Login successful! Redirecting to dashboard...',
       });
       
-      // Redirect to dashboard after successful login
-      setTimeout(() => navigate('/dashboard'), 1000);
+      // Redirect to intended destination or dashboard after successful login
+      const from = new URLSearchParams(location.search).get('from') || '/dashboard';
+      setTimeout(() => navigate(from), 1000);
       
     } catch (error) {
       console.error('Login error:', error);

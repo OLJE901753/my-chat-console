@@ -3,15 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "packageManager": "pnpm@9.12.0",
+  "packageManager": "npm@10.0.0",
   "engines": {
     "node": ">=20.0.0"
   },
   "workspaces": [
     "apps/*",
+    "server",
     "services/*"
   ],
   "scripts": {
+    "start": "npm run start-server",
     "prepare": "husky",
     "dev": "vite",
     "build": "vite build",
@@ -24,7 +26,13 @@
     "test:coverage": "vitest run --coverage",
     "preview": "vite preview",
     "start-server": "node start-server.js",
-    "test-server": "node test-server.js"
+    "test-server": "node test-server.js",
+    "install:all": "npm install --workspaces",
+    "dev:all": "npm run -w server dev & npm run dev",
+    "build:all": "npm run -ws build",
+    "lint:all": "npm run -ws lint",
+    "test:all": "npm run -ws test",
+    "install:python": "py -3.13 -m pip install -r farm_ai_crew\\requirements_full.txt && py -3.13 -m pip install -e farm_ai_crew"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -57,20 +65,23 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@sentry/node": "^10.10.0",
     "@sentry/react": "^10.10.0",
-    "@supabase/supabase-js": "^2.56.1",
+    "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.85.9",
     "@tanstack/react-query-devtools": "^5.85.9",
+    "chart.js": "^4.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "dompurify": "^3.2.6",
+    "dotenv": "^17.2.2",
     "embla-carousel-react": "^8.6.0",
     "express-rate-limit": "^8.0.1",
     "helmet": "^8.1.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "node-fetch": "^3.3.2",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",

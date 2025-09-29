@@ -3,16 +3,22 @@ const logger = require('../utils/logger');
 
 class SupabaseService {
   constructor() {
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.warn('Supabase environment variables not configured.');
+    try {
+      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.warn('⚠️ Supabase environment variables not configured. Service will run in offline mode.');
+        this.supabase = null;
+        return;
+      }
+      
+      this.supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      console.log('✅ Supabase client initialized');
+    } catch (error) {
+      console.error('❌ Failed to initialize Supabase client:', error);
       this.supabase = null;
-      return;
     }
-    
-    this.supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
   }
 
   // Drone Commands
@@ -139,7 +145,7 @@ class SupabaseService {
         
       if (error) throw error;
       return data;
-    } catch (error) {
+    } catch (rpcError) {
       // Fallback to basic query if RPC doesn't exist
       logger.warn('Using fallback metrics query');
       

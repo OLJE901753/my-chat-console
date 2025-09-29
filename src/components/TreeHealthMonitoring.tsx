@@ -109,7 +109,7 @@ const TreeHealthMonitoring = () => {
     <div className="space-y-6">
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Total Trees</CardTitle>
           </CardHeader>
@@ -121,7 +121,7 @@ const TreeHealthMonitoring = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-500" />
@@ -136,7 +136,7 @@ const TreeHealthMonitoring = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
@@ -151,7 +151,7 @@ const TreeHealthMonitoring = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -166,7 +166,7 @@ const TreeHealthMonitoring = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Avg Health</CardTitle>
           </CardHeader>
@@ -187,7 +187,7 @@ const TreeHealthMonitoring = () => {
         </TabsList>
 
         <TabsContent value="individual" className="space-y-6">
-          <Card>
+          <Card className="glass-card border-lime-500/30">
             <CardHeader>
               <CardTitle>Tree Health Status</CardTitle>
               <CardDescription>Individual tree monitoring and health assessment</CardDescription>
@@ -275,7 +275,7 @@ const TreeHealthMonitoring = () => {
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-6">
-          <Card>
+          <Card className="glass-card border-lime-500/30">
             <CardHeader>
               <CardTitle>Health Trends</CardTitle>
               <CardDescription>Long-term health patterns and predictions</CardDescription>
@@ -294,7 +294,7 @@ const TreeHealthMonitoring = () => {
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-6">
-          <Card>
+          <Card className="glass-card border-lime-500/30">
             <CardHeader>
               <CardTitle>Active Health Alerts</CardTitle>
               <CardDescription>Trees requiring immediate attention</CardDescription>

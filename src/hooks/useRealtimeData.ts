@@ -65,16 +65,18 @@ export function useRealtimeData<T>(
 
 // Drone telemetry real-time data
 export function useDroneTelemetry() {
-  return useRealtimeData('drone_telemetry', null, {
+  return useRealtimeData('drone_status', null, {
     transform: (data: Record<string, unknown>) => ({
       battery: data.battery || 0,
       altitude: data.altitude || 0,
       speed: data.speed || 0,
       temperature: data.temperature || 0,
-      position: data.position || { lat: 0, lng: 0 },
+      position: data.position || { x: 0, y: 0, z: 0 },
       orientation: data.orientation || { yaw: 0, pitch: 0, roll: 0 },
-      status: data.status || 'unknown',
-      timestamp: data.timestamp || Date.now(),
+      status: data.connected ? 'connected' : 'disconnected',
+      flying: data.flying || false,
+      recording: data.recording || false,
+      timestamp: data.lastUpdate || Date.now(),
     }),
   });
 }
@@ -122,6 +124,19 @@ export function useAgentStatus() {
       currentTask: data.currentTask || null,
       performance: data.performance || { cpu: 0, memory: 0 },
       errors: data.errors || [],
+      timestamp: data.timestamp || Date.now(),
+    }),
+  });
+}
+
+// Camera feeds real-time updates
+export function useCameraFeeds() {
+  return useRealtimeData('camera_update', null, {
+    transform: (data: Record<string, unknown>) => ({
+      cameraId: data.cameraId || '',
+      eventType: data.eventType || '',
+      camera: data.camera || null,
+      data: data.data || null,
       timestamp: data.timestamp || Date.now(),
     }),
   });

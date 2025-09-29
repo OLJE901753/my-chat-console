@@ -16,7 +16,7 @@ class EnvironmentConfig {
 
     // Check frontend URL
     if (!process.env.FRONTEND_URL) {
-      warnings.push('FRONTEND_URL not set, using default: http://localhost:8080');
+      warnings.push('FRONTEND_URL not set, using default: http://localhost:8081');
     }
 
     // Check Node environment
@@ -50,7 +50,7 @@ class EnvironmentConfig {
     return {
       nodeEnv: process.env.NODE_ENV || 'development',
       port: parseInt(process.env.PORT) || 3001,
-      frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8080',
+      frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8081',
       supabase: {
         url: process.env.SUPABASE_URL,
         serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,

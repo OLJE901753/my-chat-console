@@ -6,16 +6,21 @@ import LazyComponent from '@/components/LazyComponent';
 import RealtimeDashboard from '@/components/RealtimeDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNetatmoWeather } from '@/hooks/useNetatmoWeather';
 
 // Lazy load components for code splitting
 const DroneControlRefactored = () => import('@/components/drone/DroneControlRefactored');
 const AIMissionPlanner = () => import('@/components/AIMissionPlanner');
 const DroneMediaLibrary = () => import('@/components/DroneMediaLibrary');
+const ContentPreview = () => import('@/components/ContentPreview');
+const CameraManager = () => import('@/components/CameraManager');
 const FarmSensorOverviewOptimized = () => import('@/components/sensors/FarmSensorOverviewOptimized');
 const AIAgentManager = () => import('@/components/AIAgentManager');
 const PythonAIControl = () => import('@/components/PythonAIControl');
 
 const Dashboard: React.FC = () => {
+  const { data: netatmoData, loading: netatmoLoading, error: netatmoError, lastUpdate } = useNetatmoWeather();
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center">
@@ -52,64 +57,139 @@ const Dashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="drone-control">
-          <ErrorBoundary
-            fallback={
-              <ErrorDisplay
-                error="Failed to load Drone Control"
-                title="Drone Control Error"
-                description="There was an error loading the drone control interface. This may be due to a connection issue or server problem."
-                onRetry={() => window.location.reload()}
-                retryLabel="Reload Page"
-              />
-            }
-          >
-            <LazyComponent 
-              component={DroneControlRefactored} 
-              loadingMessage="Loading drone control interface..."
-            />
-          </ErrorBoundary>
+          <Card className="glass-card border-lime-500/30">
+            <CardContent className="p-6">
+              <ErrorBoundary
+                fallback={
+                  <ErrorDisplay
+                    error="Failed to load Drone Control"
+                    title="Drone Control Error"
+                    description="There was an error loading the drone control interface. This may be due to a connection issue or server problem."
+                    onRetry={() => window.location.reload()}
+                    retryLabel="Reload Page"
+                  />
+                }
+              >
+                <LazyComponent 
+                  component={DroneControlRefactored} 
+                  loadingMessage="Loading drone control interface..."
+                />
+              </ErrorBoundary>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="ai-missions">
-          <ErrorBoundary
-            fallback={
-              <ErrorDisplay
-                error="Failed to load AI Mission Planner"
-                title="AI Mission Planner Error"
-                description="There was an error loading the AI mission planning interface. Please try again."
-                onRetry={() => window.location.reload()}
-                retryLabel="Reload Page"
-              />
-            }
-          >
-            <LazyComponent 
-              component={AIMissionPlanner} 
-              loadingMessage="Loading AI mission planner..."
-            />
-          </ErrorBoundary>
+          <Card className="glass-card border-lime-500/30">
+            <CardContent className="p-6">
+              <ErrorBoundary
+                fallback={
+                  <ErrorDisplay
+                    error="Failed to load AI Mission Planner"
+                    title="AI Mission Planner Error"
+                    description="There was an error loading the AI mission planning interface. Please try again."
+                    onRetry={() => window.location.reload()}
+                    retryLabel="Reload Page"
+                  />
+                }
+              >
+                <LazyComponent 
+                  component={AIMissionPlanner} 
+                  loadingMessage="Loading AI mission planner..."
+                />
+              </ErrorBoundary>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="media-library">
-          <ErrorBoundary
-            fallback={
-              <ErrorDisplay
-                error="Failed to load Media Library"
-                title="Media Library Error"
-                description="There was an error loading the media library. This may be due to a database connection issue."
-                onRetry={() => window.location.reload()}
-                retryLabel="Reload Page"
-              />
-            }
-          >
-            <LazyComponent 
-              component={DroneMediaLibrary} 
-              loadingMessage="Loading media library..."
-            />
-          </ErrorBoundary>
+          <div className="space-y-6">
+            {/* Media Library */}
+            <Card className="glass-card border-lime-500/30">
+              <CardHeader>
+                <CardTitle className="gradient-text">Media Library</CardTitle>
+                <CardDescription>Manage drone photos and videos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ErrorBoundary
+                  fallback={
+                    <ErrorDisplay
+                      error="Failed to load Media Library"
+                      title="Media Library Error"
+                      description="There was an error loading the media library. This may be due to a database connection issue."
+                      onRetry={() => window.location.reload()}
+                      retryLabel="Reload Page"
+                    />
+                  }
+                >
+                  <LazyComponent 
+                    component={DroneMediaLibrary} 
+                    loadingMessage="Loading media library..."
+                  />
+                </ErrorBoundary>
+              </CardContent>
+            </Card>
+
+            {/* Content Preview and Camera Manager Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Content Preview */}
+              <Card className="glass-card border-blue-500/30">
+                <CardHeader>
+                  <CardTitle className="gradient-text">Content Preview</CardTitle>
+                  <CardDescription>AI-generated content for social media</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ErrorBoundary
+                    fallback={
+                      <ErrorDisplay
+                        error="Failed to load Content Preview"
+                        title="Content Preview Error"
+                        description="There was an error loading the content preview."
+                        onRetry={() => window.location.reload()}
+                        retryLabel="Reload Page"
+                      />
+                    }
+                  >
+                    <LazyComponent 
+                      component={ContentPreview} 
+                      loadingMessage="Loading content preview..."
+                    />
+                  </ErrorBoundary>
+                </CardContent>
+              </Card>
+
+              {/* Camera Manager */}
+              <Card className="glass-card border-purple-500/30">
+                <CardHeader>
+                  <CardTitle className="gradient-text">Camera Manager</CardTitle>
+                  <CardDescription>Control and monitor camera feeds</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ErrorBoundary
+                    fallback={
+                      <ErrorDisplay
+                        error="Failed to load Camera Manager"
+                        title="Camera Manager Error"
+                        description="There was an error loading the camera manager."
+                        onRetry={() => window.location.reload()}
+                        retryLabel="Reload Page"
+                      />
+                    }
+                  >
+                    <LazyComponent 
+                      component={CameraManager} 
+                      loadingMessage="Loading camera manager..."
+                    />
+                  </ErrorBoundary>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="farm-overview">
-          <div className="space-y-6">
+          <Card className="glass-card border-lime-500/30">
+            <CardContent className="space-y-6 p-6">
             {/* Original Status Boxes */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card className="glass-card border-lime-500/30">
@@ -142,25 +222,37 @@ const Dashboard: React.FC = () => {
               <Card className="glass-card border-lime-500/30">
                 <CardHeader>
                   <CardTitle className="gradient-text">Weather Conditions Nessa</CardTitle>
-                  <CardDescription>Source: yr.no • Stavanger area</CardDescription>
+                  <CardDescription>
+                    {netatmoError ? 'Source: yr.no • Stavanger area (Netatmo offline)' : 
+                     netatmoLoading ? 'Loading Netatmo data...' :
+                     `Source: Netatmo Station • Last update: ${lastUpdate?.toLocaleTimeString()}`}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span>Temperature</span>
-                      <span>12°C</span>
+                      <span className={netatmoData ? 'text-green-400' : 'text-gray-400'}>
+                        {netatmoData ? `${netatmoData.temperature.toFixed(1)}°C` : '12°C'}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Humidity</span>
-                      <span>78%</span>
+                      <span className={netatmoData ? 'text-blue-400' : 'text-gray-400'}>
+                        {netatmoData ? `${netatmoData.humidity.toFixed(0)}%` : '78%'}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Wind Speed</span>
-                      <span>3,2 m/s</span>
+                      <span className={netatmoData ? 'text-cyan-400' : 'text-gray-400'}>
+                        {netatmoData ? `${netatmoData.windSpeed.toFixed(0)} km/h` : '3.2 m/s'}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>Frost Risk</span>
-                      <span className="text-yellow-400">Moderate</span>
+                      <span>Rain Today</span>
+                      <span className={netatmoData ? 'text-purple-400' : 'text-yellow-400'}>
+                        {netatmoData ? `${netatmoData.rainToday.toFixed(1)} mm` : 'Offline'}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -211,45 +303,54 @@ const Dashboard: React.FC = () => {
                 loadingMessage="Loading farm sensor data..."
               />
             </ErrorBoundary>
-          </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="ai-agents" className="space-y-6">
-          <ErrorBoundary
-            fallback={
-              <ErrorDisplay
-                error="Failed to load AI Agent Manager"
-                title="AI Agent Manager Error"
-                description="There was an error loading the AI agent management interface. This may be due to a service connection issue."
-                onRetry={() => window.location.reload()}
-                retryLabel="Reload Page"
-              />
-            }
-          >
-            <LazyComponent 
-              component={AIAgentManager} 
-              loadingMessage="Loading AI agent manager..."
-            />
-          </ErrorBoundary>
+          <Card className="glass-card border-lime-500/30">
+            <CardContent className="p-6">
+              <ErrorBoundary
+                fallback={
+                  <ErrorDisplay
+                    error="Failed to load AI Agent Manager"
+                    title="AI Agent Manager Error"
+                    description="There was an error loading the AI agent management interface. This may be due to a service connection issue."
+                    onRetry={() => window.location.reload()}
+                    retryLabel="Reload Page"
+                  />
+                }
+              >
+                <LazyComponent 
+                  component={AIAgentManager} 
+                  loadingMessage="Loading AI agent manager..."
+                />
+              </ErrorBoundary>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="python-ai" className="space-y-6">
-          <ErrorBoundary
-            fallback={
-              <ErrorDisplay
-                error="Failed to load Python AI Control"
-                title="Python AI Control Error"
-                description="There was an error loading the Python AI control interface. This may be due to a Python service connection issue."
-                onRetry={() => window.location.reload()}
-                retryLabel="Reload Page"
-              />
-            }
-          >
-            <LazyComponent 
-              component={PythonAIControl} 
-              loadingMessage="Loading Python AI control interface..."
-            />
-          </ErrorBoundary>
+          <Card className="glass-card border-lime-500/30">
+            <CardContent className="p-6">
+              <ErrorBoundary
+                fallback={
+                  <ErrorDisplay
+                    error="Failed to load Python AI Control"
+                    title="Python AI Control Error"
+                    description="There was an error loading the Python AI control interface. This may be due to a Python service connection issue."
+                    onRetry={() => window.location.reload()}
+                    retryLabel="Reload Page"
+                  />
+                }
+              >
+                <LazyComponent 
+                  component={PythonAIControl} 
+                  loadingMessage="Loading Python AI control interface..."
+                />
+              </ErrorBoundary>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

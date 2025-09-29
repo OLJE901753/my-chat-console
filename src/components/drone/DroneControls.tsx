@@ -59,7 +59,7 @@ const DroneControls: React.FC<DroneControlsProps> = ({
   return (
     <div className="space-y-6">
       {/* Basic Flight Controls */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Play className="h-5 w-5" />
@@ -112,7 +112,7 @@ const DroneControls: React.FC<DroneControlsProps> = ({
       </Card>
 
       {/* Movement Controls */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Move className="h-5 w-5" />
@@ -204,7 +204,7 @@ const DroneControls: React.FC<DroneControlsProps> = ({
       </Card>
 
       {/* Rotation Controls */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <RotateCw className="h-5 w-5" />
@@ -247,7 +247,7 @@ const DroneControls: React.FC<DroneControlsProps> = ({
       </Card>
 
       {/* Speed Control */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle>Speed Control</CardTitle>
         </CardHeader>
@@ -268,7 +268,7 @@ const DroneControls: React.FC<DroneControlsProps> = ({
       </Card>
 
       {/* Camera Controls */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5" />

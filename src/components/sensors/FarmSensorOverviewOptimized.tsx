@@ -214,7 +214,7 @@ const MetricCard = React.memo<{
   }, [metric.key]);
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="glass-card border-lime-500/30 hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <span className={metric.color}>{metric.icon}</span>

@@ -155,7 +155,7 @@ export const PythonAIControl: React.FC<PythonAIControlProps> = ({ className }) =
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Status Card */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
@@ -193,7 +193,7 @@ export const PythonAIControl: React.FC<PythonAIControlProps> = ({ className }) =
       </Card>
 
       {/* Operation Selection */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle>AI Operations</CardTitle>
           <CardDescription>
@@ -300,7 +300,7 @@ export const PythonAIControl: React.FC<PythonAIControlProps> = ({ className }) =
 
       {/* Results */}
       {(result || error) && (
-        <Card>
+        <Card className="glass-card border-lime-500/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {result ? (

@@ -35,10 +35,21 @@ A real-time farm management system with drone control, weather monitoring, and A
 ## Environment Variables
 - `SUPABASE_URL`: Supabase project URL
 - `SUPABASE_SERVICE_ROLE_KEY`: Service role key for backend
-- `FRONTEND_URL`: Frontend URL for CORS (default: http://localhost:8080)
+- `FRONTEND_URL`: Frontend URL for CORS (default: http://localhost:8081)
 - `PORT`: Backend port (default: 3001)
+- `PYTHON_AI_URL`: Python FastAPI server URL (default: http://localhost:8000)
+- `NETATMO_CLIENT_ID`: Netatmo developer app client ID
+- `NETATMO_CLIENT_SECRET`: Netatmo developer app client secret
+- `NETATMO_USERNAME`: Netatmo account username/email
+- `NETATMO_PASSWORD`: Netatmo account password
 
 ## Recent Changes
+- **Netatmo Weather Station Integration**: Added real weather data from Netatmo station (MAC: 70:ee:50:29:0d:66) to Dashboard
+- **UI Color Consistency**: Fixed all status cards to use consistent glass-card border-lime-500/30 styling
+- **Comprehensive Codebase Cleanup**: Removed 19+ unnecessary files and optimized project structure
+- **Node → Python AI Integration**: Connected Enhanced Agent Service to Python FastAPI for real CrewAI execution
+- **FastAPI Wrapper**: Created `farm_ai_crew/api.py` for REST API access to AI crews
+- **Graceful Fallbacks**: System falls back to simulation when Python service unavailable
 - **CRITICAL SECURITY FIX**: Removed dangerous GRANT ALL permissions, implemented proper RLS with least privilege
 - **CORS Configuration**: Fixed default FRONTEND_URL from 8080 to 8081 to match development server
 - **Real-time System**: Re-enabled telemetry routes and properly initialized SSE service

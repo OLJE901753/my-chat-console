@@ -1,0 +1,200 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: nordic-farm-postgres
+    environment:
+      POSTGRES_DB: nordic_farm_ai
+      POSTGRES_USER: nordic_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nordic_user -d nordic_farm_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: nordic-farm-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password_123}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: nordic-farm-backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://nordic_user:${POSTGRES_PASSWORD:-secure_password_123}@postgres:5432/nordic_farm_ai
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_password_123}@redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log/nordic-farm-ai
+      - ./uploads:/var/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Content Agent Service
+  content-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.content-agent
+    container_name: nordic-farm-content-agent
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CONTENT_AGENT_PORT=8030
+      - MAX_VIDEO_SIZE_MB=500
+      - TEMP_DIRECTORY=/tmp/content_agent
+    ports:
+      - "8030:8030"
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log/nordic-farm-ai
+      - ./uploads:/var/uploads
+      - ./temp:/tmp/content_agent
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8030/v1/content/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Integration Service
+  integration:
+    build:
+      context: .
+      dockerfile: Dockerfile.integration
+    container_name: nordic-farm-integration
+    environment:
+      - PYTHONUNBUFFERED=1
+      - INTEGRATION_PORT=8031
+      - DRONE_SERVICE_URL=http://backend:3001
+      - CONTENT_AGENT_URL=http://content-agent:8030
+    ports:
+      - "8031:8031"
+    depends_on:
+      - backend
+      - content-agent
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log/nordic-farm-ai
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8031/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: nordic-farm-frontend
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nordic-farm-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+      - content-agent
+      - integration
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nordic-farm-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nordic-farm-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: nordic-farm-network

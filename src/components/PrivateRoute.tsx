@@ -1,5 +1,5 @@
 import React from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 
 import { authService } from '@/lib/auth'
 
@@ -9,9 +9,11 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) => {
+  const location = useLocation()
   const isAuthed = authService.isAuthenticated()
+  
   if (!isAuthed) {
-    return <Navigate to="/" replace />
+    return <Navigate to={`/?from=${encodeURIComponent(location.pathname)}`} replace />
   }
   if (roles && roles.length > 0 && !authService.hasAnyRole(roles)) {
     return <Navigate to="/" replace />

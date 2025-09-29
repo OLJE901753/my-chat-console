@@ -71,7 +71,7 @@ const DroneStatusPanel: React.FC<DroneStatusPanelProps> = ({ status }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Connection Status */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             {status.connected ? (
@@ -90,7 +90,7 @@ const DroneStatusPanel: React.FC<DroneStatusPanelProps> = ({ status }) => {
       </Card>
 
       {/* Battery Status */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Battery className={`h-4 w-4 ${getBatteryColor(status.battery)}`} />
@@ -108,7 +108,7 @@ const DroneStatusPanel: React.FC<DroneStatusPanelProps> = ({ status }) => {
       </Card>
 
       {/* Altitude */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Navigation className="h-4 w-4 text-blue-500" />
@@ -124,7 +124,7 @@ const DroneStatusPanel: React.FC<DroneStatusPanelProps> = ({ status }) => {
       </Card>
 
       {/* Speed & Temperature */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Gauge className="h-4 w-4 text-purple-500" />
@@ -145,7 +145,7 @@ const DroneStatusPanel: React.FC<DroneStatusPanelProps> = ({ status }) => {
       </Card>
 
       {/* Safety Status */}
-      <Card className="md:col-span-2 lg:col-span-4">
+      <Card className="glass-card border-lime-500/30 md:col-span-2 lg:col-span-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <AlertTriangle className={`h-4 w-4 ${getSafetyColor()}`} />
@@ -165,7 +165,7 @@ const DroneStatusPanel: React.FC<DroneStatusPanelProps> = ({ status }) => {
       </Card>
 
       {/* Weather Conditions */}
-      <Card className="md:col-span-2 lg:col-span-4">
+      <Card className="glass-card border-lime-500/30 md:col-span-2 lg:col-span-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Weather Conditions</CardTitle>
         </CardHeader>

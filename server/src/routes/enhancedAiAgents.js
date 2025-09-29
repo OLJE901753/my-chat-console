@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const logger = require('../utils/logger');
-const EnhancedAIAgentService = require('../services/enhancedAIAgentService');
+import logger from '../utils/logger.js';
+import EnhancedAIAgentService from '../services/enhancedAIAgentService.js';
 
 // Initialize Enhanced AI Agent Service
 const enhancedAgentService = new EnhancedAIAgentService();
@@ -446,4 +446,4 @@ class EnhancedAIAgentRoutes {
   }
 }
 
-module.exports = EnhancedAIAgentRoutes;
+export default EnhancedAIAgentRoutes;

@@ -80,7 +80,7 @@ const DroneControlRefactored: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card>
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plane className="h-6 w-6" />
@@ -164,7 +164,7 @@ const DroneControlRefactored: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="media" className="space-y-4">
-          <Card>
+          <Card className="glass-card border-lime-500/30">
             <CardHeader>
               <CardTitle>Media Library</CardTitle>
             </CardHeader>

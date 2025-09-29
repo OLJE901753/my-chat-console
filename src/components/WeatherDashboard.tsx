@@ -74,7 +74,7 @@ const WeatherDashboard: React.FC = () => {
 
   if (loading && !currentWeather) {
     return (
-      <Card className="glass-card border-blue-500/20">
+      <Card className="glass-card border-lime-500/30">
         <CardContent className="p-6">
           <div className="flex items-center gap-2">
             <Cloud className="h-5 w-5 animate-pulse" />
@@ -88,7 +88,7 @@ const WeatherDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="glass-card border-blue-500/30">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle className="gradient-text flex items-center gap-2">
             <Cloud className="h-5 w-5 text-blue-400" />
@@ -125,7 +125,7 @@ const WeatherDashboard: React.FC = () => {
 
       {/* Current Weather */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="glass-card border-blue-500/20">
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-2">
             <CardTitle className="gradient-text flex items-center gap-2 text-sm">
               <Thermometer className="h-4 w-4" />
@@ -142,7 +142,7 @@ const WeatherDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-blue-500/20">
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-2">
             <CardTitle className="gradient-text flex items-center gap-2 text-sm">
               <Wind className="h-4 w-4" />
@@ -157,7 +157,7 @@ const WeatherDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-blue-500/20">
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-2">
             <CardTitle className="gradient-text flex items-center gap-2 text-sm">
               <Droplets className="h-4 w-4" />
@@ -175,7 +175,7 @@ const WeatherDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-blue-500/20">
+        <Card className="glass-card border-lime-500/30">
           <CardHeader className="pb-2">
             <CardTitle className="gradient-text flex items-center gap-2 text-sm">
               <Eye className="h-4 w-4" />
@@ -192,7 +192,7 @@ const WeatherDashboard: React.FC = () => {
       </div>
 
       {/* Growing Degree Days */}
-      <Card className="glass-card border-green-500/20">
+      <Card className="glass-card border-lime-500/30">
         <CardHeader>
           <CardTitle className="gradient-text">Growing Degree Days (GDD) - Apple</CardTitle>
           <CardDescription>
@@ -232,7 +232,7 @@ const WeatherDashboard: React.FC = () => {
 
       {/* Disease Risk */}
       {diseaseRisk && (
-        <Card className="glass-card border-orange-500/20">
+        <Card className="glass-card border-lime-500/30">
           <CardHeader>
             <CardTitle className="gradient-text">Disease Risk</CardTitle>
             <CardDescription>

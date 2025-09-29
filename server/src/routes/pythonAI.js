@@ -3,6 +3,58 @@ const { spawn } = require('child_process');
 const path = require('path');
 const router = express.Router();
 const fs = require('fs');
+const http = require('http');
+const https = require('https');
+const { URL } = require('url');
+
+// HTTP request helper function for Python API calls
+function makeHttpRequest(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const isHttps = urlObj.protocol === 'https:';
+    const httpModule = isHttps ? https : http;
+    
+    const requestOptions = {
+      hostname: urlObj.hostname,
+      port: urlObj.port || (isHttps ? 443 : 80),
+      path: urlObj.pathname + urlObj.search,
+      method: options.method || 'GET',
+      headers: options.headers || {},
+      timeout: options.timeout || 10000
+    };
+    
+    const req = httpModule.request(requestOptions, (res) => {
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      res.on('end', () => {
+        resolve({
+          ok: res.statusCode >= 200 && res.statusCode < 300,
+          status: res.statusCode,
+          text: () => Promise.resolve(body),
+          json: () => Promise.resolve(JSON.parse(body))
+        });
+      });
+    });
+    
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
+    
+    if (options.body) {
+      req.write(options.body);
+    }
+    req.end();
+  });
+}
+
+// Simple fetch polyfill using the HTTP helper
+const fetch = async (url, options = {}) => {
+  return makeHttpRequest(url, options);
+};
 
 // Python AI System Integration
 class PythonAIService {
@@ -101,10 +153,39 @@ class PythonAIService {
 const pythonAIService = new PythonAIService();
 
 // Routes
-router.get('/status', (req, res) => {
+router.get('/status', async (req, res) => {
   try {
-    const status = pythonAIService.getStatus();
-    res.json(status);
+    // Check if our FastAPI Python server is running on port 8000
+    const pythonApiUrl = process.env.PYTHON_AI_URL || 'http://localhost:8000';
+    
+    try {
+      const response = await fetch(`${pythonApiUrl}/health`, { 
+        signal: AbortSignal.timeout(5000) 
+      });
+      
+      if (response.ok) {
+        const healthData = await response.json();
+        res.json({
+          isRunning: false, // Not running a specific operation
+          pythonPath: pythonApiUrl,
+          timestamp: new Date().toISOString(),
+          status: 'online',
+          service: healthData.service || 'Farm AI Crew API',
+          version: healthData.version || '1.0.0'
+        });
+      } else {
+        throw new Error('Health check failed');
+      }
+    } catch (fetchError) {
+      // Python FastAPI server is not running
+      res.json({
+        isRunning: false,
+        pythonPath: pythonApiUrl,
+        timestamp: new Date().toISOString(),
+        status: 'offline',
+        error: 'Python FastAPI server not running on port 8000'
+      });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -112,8 +193,31 @@ router.get('/status', (req, res) => {
 
 router.post('/daily-operations', async (req, res) => {
   try {
-    const result = await pythonAIService.runPythonAI('daily', req.body);
-    res.json(result);
+    const pythonApiUrl = process.env.PYTHON_AI_URL || 'http://localhost:8000';
+    const response = await fetch(`${pythonApiUrl}/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        task_id: `daily-${Date.now()}`,
+        agent_id: 'farm-manager',
+        task_type: 'daily_operations',
+        payload: req.body,
+        trace_id: `trace-${Date.now()}`
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      res.json({
+        status: result.success ? 'success' : 'error',
+        output: result.result?.output || JSON.stringify(result.result, null, 2)
+      });
+    } else {
+      const errorText = await response.text();
+      res.status(500).json({ error: `Python API error: ${errorText}` });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -158,8 +262,31 @@ router.post('/full-crew', async (req, res) => {
 
 router.post('/test', async (req, res) => {
   try {
-    const result = await pythonAIService.runPythonAI('test', req.body);
-    res.json(result);
+    const pythonApiUrl = process.env.PYTHON_AI_URL || 'http://localhost:8000';
+    const response = await fetch(`${pythonApiUrl}/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        task_id: `test-${Date.now()}`,
+        agent_id: 'farm-manager',
+        task_type: 'crop_analysis',
+        payload: { ...req.body, test_mode: true },
+        trace_id: `test-trace-${Date.now()}`
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      res.json({
+        status: result.success ? 'success' : 'error',
+        output: result.result?.output || JSON.stringify(result.result, null, 2)
+      });
+    } else {
+      const errorText = await response.text();
+      res.status(500).json({ error: `Python API error: ${errorText}` });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

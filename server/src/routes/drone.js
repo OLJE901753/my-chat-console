@@ -1,32 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const SupabaseService = require('../services/supabaseService');
+const TelloDroneService = require('../services/telloDroneService');
 
-// Initialize Supabase service
+// Initialize services
 const supabaseService = new SupabaseService();
+const droneService = new TelloDroneService();
 const { v4: uuidv4 } = require('uuid');
+
+// Export droneService for use in other modules
+module.exports.droneService = droneService;
 
 const logger = require('../utils/logger');
 
 // Get drone status
 router.get('/status', (req, res) => {
   try {
-    // This would typically come from the drone service
-    // For now, return a mock status
-    const status = {
-      connected: true,
-      battery: 85,
-      altitude: 0,
-      speed: 0,
-      temperature: 25,
-      position: { x: 0, y: 0, z: 0 },
-      orientation: { yaw: 0, pitch: 0, roll: 0 },
-      lastUpdate: new Date().toISOString()
-    };
+    // Get real status from Tello drone service
+    const status = droneService.getStatus();
     
+    logger.info('📊 Drone status requested:', status);
     res.json({ success: true, data: status });
   } catch (error) {
-    logger.error('Error getting drone status:', error);
+    logger.error('❌ Error getting drone status:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -41,18 +37,17 @@ router.post('/command', async (req, res) => {
     }
     
     // Log the command
-    logger.info(`Drone command received: ${command}`, { params });
+    logger.info(`📤 Drone command received: ${command}`, { params });
     
-    // In a real implementation, this would be sent to the drone service
-    // For now, simulate the command execution
-    const result = await simulateCommandExecution(command, params);
+    // Execute real command using Tello drone service
+    const result = await executeRealCommand(command, params);
     
     // Log the result
-    logger.info(`Command executed successfully: ${command}`, { result });
+    logger.info(`✅ Command executed successfully: ${command}`, { result });
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing drone command:', error);
+    logger.error(`❌ Error executing drone command: ${command}`, error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -60,14 +55,14 @@ router.post('/command', async (req, res) => {
 // Takeoff
 router.post('/takeoff', async (req, res) => {
   try {
-    logger.info('Takeoff command received');
+    logger.info('🚁 Takeoff command received');
     
-    // Simulate takeoff
-    const result = await simulateCommandExecution('takeoff');
+    // Execute real takeoff
+    const result = await droneService.takeoff();
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing takeoff:', error);
+    logger.error('❌ Error executing takeoff:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -75,14 +70,14 @@ router.post('/takeoff', async (req, res) => {
 // Land
 router.post('/land', async (req, res) => {
   try {
-    logger.info('Land command received');
+    logger.info('🛬 Land command received');
     
-    // Simulate landing
-    const result = await simulateCommandExecution('land');
+    // Execute real landing
+    const result = await droneService.land();
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing land:', error);
+    logger.error('❌ Error executing land:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -90,14 +85,14 @@ router.post('/land', async (req, res) => {
 // Emergency stop
 router.post('/emergency', async (req, res) => {
   try {
-    logger.warn('EMERGENCY STOP command received');
+    logger.warn('🚨 EMERGENCY STOP command received');
     
-    // Simulate emergency stop
-    const result = await simulateCommandExecution('emergency');
+    // Execute real emergency stop
+    const result = await droneService.emergency();
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing emergency stop:', error);
+    logger.error('❌ Error executing emergency stop:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -114,14 +109,14 @@ router.post('/move', async (req, res) => {
       });
     }
     
-    logger.info(`Move command received: ${direction} by ${distance}cm`);
+    logger.info(`📤 Move command received: ${direction} by ${distance}cm`);
     
-    // Simulate movement
-    const result = await simulateCommandExecution('move', { direction, distance });
+    // Execute real movement
+    const result = await droneService.move(direction, distance);
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing move command:', error);
+    logger.error(`❌ Error executing move command: ${direction} ${distance}cm`, error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -138,14 +133,14 @@ router.post('/rotate', async (req, res) => {
       });
     }
     
-    logger.info(`Rotate command received: ${degrees} degrees`);
+    logger.info(`🔄 Rotate command received: ${degrees} degrees`);
     
-    // Simulate rotation
-    const result = await simulateCommandExecution('rotate', { degrees });
+    // Execute real rotation
+    const result = await droneService.rotate(degrees);
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing rotate command:', error);
+    logger.error(`❌ Error executing rotate command: ${degrees} degrees`, error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -153,14 +148,14 @@ router.post('/rotate', async (req, res) => {
 // Capture photo
 router.post('/photo', async (req, res) => {
   try {
-    logger.info('Photo capture command received');
+    logger.info('📸 Photo capture command received');
     
-    // Simulate photo capture
-    const result = await simulateCommandExecution('capture_photo');
+    // Execute real photo capture
+    const result = await droneService.capturePhoto();
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing photo capture:', error);
+    logger.error('❌ Error executing photo capture:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -168,14 +163,14 @@ router.post('/photo', async (req, res) => {
 // Start recording
 router.post('/recording/start', async (req, res) => {
   try {
-    logger.info('Start recording command received');
+    logger.info('🎥 Start recording command received');
     
-    // Simulate recording start
-    const result = await simulateCommandExecution('start_recording');
+    // Execute real recording start
+    const result = await droneService.startRecording();
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing start recording:', error);
+    logger.error('❌ Error executing start recording:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -183,14 +178,14 @@ router.post('/recording/start', async (req, res) => {
 // Stop recording
 router.post('/recording/stop', async (req, res) => {
   try {
-    logger.info('Stop recording command received');
+    logger.info('⏹️ Stop recording command received');
     
-    // Simulate recording stop
-    const result = await simulateCommandExecution('stop_recording');
+    // Execute real recording stop
+    const result = await droneService.stopRecording();
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing stop recording:', error);
+    logger.error('❌ Error executing stop recording:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -207,14 +202,14 @@ router.post('/speed', async (req, res) => {
       });
     }
     
-    logger.info(`Set speed command received: ${speed} cm/s`);
+    logger.info(`⚡ Set speed command received: ${speed} cm/s`);
     
-    // Simulate speed change
-    const result = await simulateCommandExecution('set_speed', { speed });
+    // Execute real speed change
+    const result = await droneService.setSpeed(speed);
     
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('Error executing set speed command:', error);
+    logger.error(`❌ Error executing set speed command: ${speed} cm/s`, error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -272,89 +267,82 @@ router.get('/recordings', async (req, res) => {
   }
 });
 
-// Simulate command execution (replace with actual drone SDK calls)
-async function simulateCommandExecution(command, params = {}) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let result;
-      
-      switch (command) {
-        case 'takeoff':
-          result = { 
-            success: true, 
-            message: 'Takeoff successful', 
-            altitude: 1.5 
-          };
-          break;
-        case 'land':
-          result = { 
-            success: true, 
-            message: 'Landing successful', 
-            altitude: 0 
-          };
-          break;
-        case 'emergency':
-          result = { 
-            success: true, 
-            message: 'Emergency stop executed', 
-            altitude: 0 
-          };
-          break;
-        case 'move':
-          result = { 
-            success: true, 
-            message: `Moved ${params.direction} by ${params.distance}cm`,
-            newPosition: { x: 0, y: 0, z: 0 }
-          };
-          break;
-        case 'rotate':
-          result = { 
-            success: true, 
-            message: `Rotated by ${params.degrees} degrees`,
-            newYaw: params.degrees
-          };
-          break;
-        case 'capture_photo':
-          result = { 
-            success: true, 
-            message: 'Photo captured successfully',
-            photoId: uuidv4(),
-            timestamp: new Date().toISOString()
-          };
-          break;
-        case 'start_recording':
-          result = { 
-            success: true, 
-            message: 'Recording started',
-            recordingId: uuidv4(),
-            timestamp: new Date().toISOString()
-          };
-          break;
-        case 'stop_recording':
-          result = { 
-            success: true, 
-            message: 'Recording stopped',
-            recordingId: uuidv4(),
-            duration: 5000
-          };
-          break;
-        case 'set_speed':
-          result = { 
-            success: true, 
-            message: `Speed set to ${params.speed}cm/s`,
-            speed: params.speed
-          };
-          break;
-        default:
-          result = { 
-            success: false, 
-            error: `Unknown command: ${command}` 
-          };
-      }
-      
-      resolve(result);
-    }, 1000); // Simulate 1 second delay
-  });
+// Connect to drone
+router.post('/connect', async (req, res) => {
+  try {
+    logger.info('🔌 Connect to drone command received');
+    
+    const result = await droneService.connect();
+    
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('❌ Error connecting to drone:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Disconnect from drone
+router.post('/disconnect', async (req, res) => {
+  try {
+    logger.info('🔌 Disconnect from drone command received');
+    
+    const result = await droneService.disconnect();
+    
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('❌ Error disconnecting from drone:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Reconnect to drone
+router.post('/reconnect', async (req, res) => {
+  try {
+    logger.info('🔄 Reconnect to drone command received');
+    
+    const result = await droneService.reconnect();
+    
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('❌ Error reconnecting to drone:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Execute real drone command using TelloDroneService
+async function executeRealCommand(command, params = {}) {
+  try {
+    switch (command) {
+      case 'takeoff':
+        return await droneService.takeoff();
+      case 'land':
+        return await droneService.land();
+      case 'emergency':
+        return await droneService.emergency();
+      case 'move':
+        return await droneService.move(params.direction, params.distance);
+      case 'rotate':
+        return await droneService.rotate(params.degrees);
+      case 'capture_photo':
+        return await droneService.capturePhoto();
+      case 'start_recording':
+        return await droneService.startRecording();
+      case 'stop_recording':
+        return await droneService.stopRecording();
+      case 'set_speed':
+        return await droneService.setSpeed(params.speed);
+      default:
+        // For unknown commands, try sending directly to drone
+        const response = await droneService.sendCommand(command);
+        return {
+          success: true,
+          message: `Command executed: ${command}`,
+          response: response
+        };
+    }
+  } catch (error) {
+    throw error;
+  }
 }
 
 module.exports = router;
