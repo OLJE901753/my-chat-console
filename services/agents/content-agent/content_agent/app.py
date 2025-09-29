@@ -16,6 +16,7 @@ import shutil
 # Import our new modules
 from .video_processor import VideoProcessor, VideoClip, VideoProcessingConfig
 from .social_media_generator import SocialMediaGenerator, ContentMetadata
+from .social_media_poster import SocialMediaPoster, PostingResult
 
 try:
     import psycopg
@@ -41,6 +42,7 @@ app.add_middleware(
 # Initialize services
 video_processor = VideoProcessor()
 social_generator = SocialMediaGenerator()
+social_poster = SocialMediaPoster()
 
 # Root endpoint
 @app.get("/")
@@ -55,6 +57,8 @@ async def root():
             "process_video": "/v1/content/process-video",
             "upload_video": "/v1/content/upload-video",
             "trending_hashtags": "/v1/content/trending-hashtags",
+            "post_content": "/v1/content/post",
+            "posting_status": "/v1/content/posting-status",
             "docs": "/docs"
         }
     }
@@ -350,6 +354,68 @@ def health_check():
             "competitor_analysis"
         ]
     }
+
+# Social Media Posting Endpoints
+
+class PostContentInput(BaseModel):
+    """Input for posting content to social media"""
+    content_metadata: Dict[str, Any]  # Platform -> ContentMetadata
+    media_files: Dict[str, str]  # Platform -> file path
+
+class PostContentOutput(BaseModel):
+    """Output from posting content"""
+    success: bool
+    results: List[Dict[str, Any]]
+    posted_at: str
+
+@app.post("/v1/content/post", response_model=PostContentOutput)
+def post_content(body: PostContentInput) -> PostContentOutput:
+    """Post content to social media platforms"""
+    try:
+        logger.info(f"Posting content to {len(body.content_metadata)} platforms")
+        
+        # Post content to all platforms
+        results = social_poster.post_content(body.content_metadata, body.media_files)
+        
+        # Convert results to dict format
+        results_dict = []
+        for result in results:
+            results_dict.append({
+                "platform": result.platform,
+                "success": result.success,
+                "post_id": result.post_id,
+                "url": result.url,
+                "error": result.error,
+                "posted_at": result.posted_at.isoformat() if result.posted_at else None
+            })
+        
+        success_count = sum(1 for r in results if r.success)
+        overall_success = success_count > 0
+        
+        return PostContentOutput(
+            success=overall_success,
+            results=results_dict,
+            posted_at=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error posting content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/v1/content/posting-status")
+def get_posting_status():
+    """Get status of social media posting capabilities"""
+    try:
+        status = social_poster.get_posting_status()
+        return {
+            "success": True,
+            "platforms": status,
+            "configured_platforms": [p for p, configured in status.items() if configured],
+            "total_platforms": len(status)
+        }
+    except Exception as e:
+        logger.error(f"Error getting posting status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def run():
